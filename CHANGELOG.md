@@ -1,4 +1,4 @@
-Chanelog
+Changelog
 ========
 
 2014-07-05
