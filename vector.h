@@ -15,3 +15,4 @@ double length(Vec2d v);
 double distance(Vec2d v1, Vec2d v2);
 
 #endif /* _VECTOR_H_ */
+

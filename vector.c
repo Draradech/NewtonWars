@@ -1,5 +1,4 @@
 #include <math.h>
-
 #include "vector.h"
 
 Vec2d vsub(Vec2d v1, Vec2d v2)
@@ -43,3 +42,4 @@ double distance(Vec2d v1, Vec2d v2)
 {
    return length(vsub(v1, v2));
 }
+

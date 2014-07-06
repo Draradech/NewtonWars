@@ -1,8 +1,10 @@
+#include "simulation.h"
+
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
 
-#include "simulation.h"
+#include "config.h"
 
 SimPlanet planet[PLANETS];
 SimPlayer player[MAXPLAYERS];
@@ -111,11 +113,6 @@ static void wallHit(void)
    if(traceCallback) traceCallback();
 }
 
-void init(void)
-{
-  initPlanets();
-}
-
 void fireBullet(void)
 {
    int s, i, j, p;
@@ -186,3 +183,13 @@ void setTraceCallback(void (*func)(void))
 {
    traceCallback = func;
 }
+
+void initSimulation(void)
+{
+  initPlanets();
+}
+
+void stepSimulation(void)
+{
+}
+
