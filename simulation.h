@@ -6,12 +6,31 @@
 typedef struct
 {
    Vec2d position;
+   Vec2d speed;
+   int live;
+   int leftSource;
+} SimMissile;
+
+typedef struct
+{
+   Vec2d* dot;
+   SimMissile missile;
+   int length;
+} SimShot;
+
+typedef struct
+{
+   SimShot* shot;
+   int currentShot;
+   Vec2d position;
    double angle;
-   double power;
+   double force;
    int deaths;
    int kills;
    int shots;
    int active;
+   int valid;
+   int didShoot;
 } SimPlayer;
 
 typedef struct
@@ -21,23 +40,17 @@ typedef struct
    double mass;
 } SimPlanet;
 
-typedef struct
-{
-   Vec2d position;
-   Vec2d speed;
-   int live;
-   int leftSource;
-} SimBullet;
+void playerJoin(int p);
+void playerLeave(int p);
+void updateAngle(int p, double a);
+void updateForce(int p, double f);
+void clearTraces(int p);
+void reinitialize(void);
 
-extern SimPlanet planet[PLANETS];
-extern SimPlayer player[MAXPLAYERS];
-extern SimBullet bullet;
-
-extern int currentPlayer;
-void fireBullet(void);
-void setTraceCallback(void (*func)(void));
-void initPlayer(int p, int clear);
-void nextPlayer(void);
+SimShot* getShot(int p, int s);
+SimPlanet* getPlanet(int i);
+SimPlayer* getPlayer(int p);
+int getCurrentPlayer(void);
 
 void initSimulation(void);
 void stepSimulation(void);

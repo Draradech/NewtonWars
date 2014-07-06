@@ -3,19 +3,21 @@
 
 #define LIMIT(x, min, max) (((x) < (min)) ? (min) : ((x) > (max)) ? (max) : (x))
 
-typedef struct SConfig
+typedef struct
 {
    int maxPlayers;
    int numPlanets;
    int maxSegments;
    int segmentSteps;
+   int numShots;
    int fastmode;
    int fullscreen;
+   int oneline;
    double battlefieldW;
    double battlefieldH;
-} TConfig;
+} Config;
 
-extern TConfig conf;
+extern Config conf;
 
 void config(int* argc, char** argv);
 

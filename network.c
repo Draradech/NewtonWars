@@ -1,7 +1,7 @@
 #include "network.h"
 
 #include <stdio.h>
-
+#include <ctype.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include "simulation.h"
+#include "interface.h"
 
 #ifdef _WIN32
 #define close closesocket
@@ -31,8 +32,7 @@
 
 #define PORT "3490"
 #define BACKLOG 4
-#define NUMCONNS MAXPLAYERS
-#define WELCOME "\xff\xfc\x01\r\nUse \"n name\" to change name, \"p power\" to change power or \"c\" to clear past shots.\r\nEverything else is interpreted as a shooting angle.\r\n\r\n> "
+#define WELCOME "\r\nUse \"n name\" to change name, \"f force\" to change force or \"c\" to clear past shots.\r\nEverything else is interpreted as a shooting angle.\r\n\r\n> "
 
 typedef struct
 {
@@ -45,7 +45,7 @@ fd_set master, readfds;
 int fdmax, listener;
 char buf[256];
 char sendbuf[256];
-connection_t connection[NUMCONNS];
+connection_t* connection;
 
 void print_error(const char* msg)
 {
@@ -86,6 +86,8 @@ void initNetwork(void)
    int yes = 1;
    int no = 0;
    int rv;
+   
+   connection = malloc(conf.maxPlayers * sizeof(connection_t));
    
    #ifdef _WIN32
    WSADATA wsaData;
@@ -230,31 +232,17 @@ void stepNetwork(void)
             else
             {
                getnameinfo((struct sockaddr *)&remoteaddr, addrlen, remoteIP, sizeof remoteIP, NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV);
-               for(k = 0; k < NUMCONNS; ++k)
+               for(k = 0; k < conf.maxPlayers; ++k)
                {
                   if(connection[k].socket == 0)
                   {
                      connection[k].socket = newfd;
-                     player[k].active = 1;
-                     initUiPlayer(k);
-                     if(k == 0)
-                     {
-                        for(pi = 1; pi < MAXPLAYERS; pi++)
-                        {
-                           if(player[pi].active)
-                           {
-                              break;
-                           }
-                        }
-                        if(pi == MAXPLAYERS)
-                        {
-                           currentPlayer = 0;
-                        }
-                     }
+                     playerJoin(k);
+                     updateName(k, "Anonymous");
                      break;
                   }
                }
-               if(k == NUMCONNS)
+               if(k == conf.maxPlayers)
                {
                   close(newfd);
                   printf("new connection from %s on socket %d refused: max connections\r\n", remoteIP, newfd);
@@ -286,17 +274,12 @@ void stepNetwork(void)
                {
                   print_error("recv");
                }
-               for(k = 0; k < NUMCONNS; ++k)
+               for(k = 0; k < conf.maxPlayers; ++k)
                {
                   if(connection[k].socket == i)
                   {
                      connection[k].socket = 0;
-                     player[k].active = 0;
-                     uiPlayer[k].nick[0] = '\0';
-                     if(k == currentPlayer)
-                     {
-                        nextPlayer();
-                     }
+                     playerLeave(k);
                      break;
                   }
                }   
@@ -306,7 +289,7 @@ void stepNetwork(void)
             else
             {
                pi = -1;
-               for(k = 0; k < NUMCONNS; ++k)
+               for(k = 0; k < conf.maxPlayers; ++k)
                {
                   if(connection[k].socket == i)
                   {
@@ -318,9 +301,9 @@ void stepNetwork(void)
                {
                   unsigned char c = buf[k];
                   //printf("%x ", c);
-                  if(c != '\r' && c != '\n' && c != 0)
+                  if(c != '\r' && c != '\n')
                   {
-                     if(connection[pi].msgbufindex < 128 - 2)
+                     if(isprint(c) && connection[pi].msgbufindex < 128 - 2)
                      {
                         connection[pi].msgbuf[connection[pi].msgbufindex++] = c;
                      }
@@ -342,57 +325,53 @@ void stepNetwork(void)
                      {
                         print_error("send");
                      }
-                     printf("%s: \"%s\"\r\n", uiPlayer[pi].nick, connection[pi].msgbuf);
+                     printf("%d: \"%s\"\r\n", pi, connection[pi].msgbuf);
                      switch(connection[pi].msgbuf[0])
                      {
                         case 'n':
                         {
-                           snprintf(uiPlayer[pi].nick, 16, "%s", connection[pi].msgbuf + 2);
-                           printf("Nick parsed as: %s\r\n\r\n", uiPlayer[pi].nick);
+                           updateName(pi, connection[pi].msgbuf + 2);
                            break;
                         }
-                        case 'p':
+                        case 'f':
                         {
-                           double d;
-                           
-                           d = atof(connection[pi].msgbuf + 2);
-                           printf("Power parsed as: %.20lf\r\n\r\n", d);
-                           player[pi].power = LIMIT(d, 0.0, 15.0);
-                           sprintf(sendbuf, "Power set to %lf for next shot\r\n", player[pi].power);
-                           if(send(i, sendbuf, strlen(sendbuf), MSG_NOSIGNAL) == -1)
-                           {
-                              print_error("send");
-                           }
+                           updateForce(pi, atof(connection[pi].msgbuf + 2));
                            break;
                         }
                         case 'z':
                         {
-                           double d;
-                           
-                           d = atof(connection[pi].msgbuf + 2);
-                           printf("Zoom parsed as: %.20lf\r\n\r\n", d);
-                           zoom = LIMIT(d, 0.0, 1.0);
-                           sprintf(sendbuf, "Zoom set to %lf\r\n", zoom);
-                           if(send(i, sendbuf, strlen(sendbuf), MSG_NOSIGNAL) == -1)
-                           {
-                              print_error("send");
-                           }
+                           updateZoom(atof(connection[pi].msgbuf + 2));
                            break;
                         }
                         case 'c':
                         {
-                           clearDotsP(pi);
-                           printf("Parsed as clear.\r\n\r\n");
+                           clearTraces(pi);
+                           break;
+                        }
+                        case 'r':
+                        {
+                           toggleFps();
+                           break;
+                        }
+                        case 'i':
+                        {
+                           if(strcmp("init", connection[pi].msgbuf) == 0)
+                           {
+                              reinitialize();
+                           }
+                           break;
+                        }
+                        case 'e':
+                        {
+                           if(strcmp("exit", connection[pi].msgbuf) == 0)
+                           {
+                              exit(0);
+                           }
                            break;
                         }
                         default:
                         {
-                           double d;
-                           
-                           d = atof(connection[pi].msgbuf);
-                           printf("Angle parsed as: %.20lf\r\n\r\n", d);
-                           player[pi].angle = d;
-                           uiPlayer[pi].valid = 1;
+                           updateAngle(pi, atof(connection[pi].msgbuf));
                            break;
                         }
                      }
