@@ -39,12 +39,13 @@ typedef struct
    int socket;
    char msgbuf[128];
    int msgbufindex;
+   int echo;
 } connection_t;
 
 fd_set master, readfds;
 int fdmax, listener;
-char buf[256];
-char sendbuf[256];
+char buf[128];
+char sendbuf[128];
 connection_t* connection;
 
 void print_error(const char* msg)
@@ -88,6 +89,7 @@ void initNetwork(void)
    int rv;
    
    connection = malloc(conf.maxPlayers * sizeof(connection_t));
+   memset(connection, 0, conf.maxPlayers * sizeof(connection_t));
    
    #ifdef _WIN32
    WSADATA wsaData;
@@ -217,6 +219,28 @@ void stepNetwork(void)
       exit(5);
    }
    
+   if(getDeathMessage(sendbuf))
+   {
+      for(k = 0; k < conf.maxPlayers; ++k)
+      {
+         if(connection[k].socket)
+         {
+            if(send(connection[k].socket, "\r\n", 2, MSG_NOSIGNAL) == -1)
+            {
+               print_error("send");
+            }
+            if(send(connection[k].socket, sendbuf, strlen(sendbuf), MSG_NOSIGNAL) == -1)
+            {
+               print_error("send");
+            }
+            if(send(connection[k].socket, "\r\n> ", 4, MSG_NOSIGNAL) == -1)
+            {
+               print_error("send");
+            }
+         }
+      }
+   }
+   
    for(i = 0; i <= fdmax; ++i)
    {
       if(FD_ISSET(i, &readfds))
@@ -279,6 +303,7 @@ void stepNetwork(void)
                   if(connection[k].socket == i)
                   {
                      connection[k].socket = 0;
+                     connection[k].echo = 0;
                      playerLeave(k);
                      break;
                   }
@@ -317,15 +342,18 @@ void stepNetwork(void)
                      connection[pi].msgbuf[connection[pi].msgbufindex] = '\0';
                      connection[pi].msgbuf[connection[pi].msgbufindex + 1] = '\0';
                      connection[pi].msgbufindex = 0;
-                     if(send(i, connection[pi].msgbuf, strlen(connection[pi].msgbuf), MSG_NOSIGNAL) == -1)
+                     if(connection[pi].echo)
                      {
-                        print_error("send");
+                        if(send(i, connection[pi].msgbuf, strlen(connection[pi].msgbuf), MSG_NOSIGNAL) == -1)
+                        {
+                           print_error("send");
+                        }
+                        if(send(i, "\r\n", 2, MSG_NOSIGNAL) == -1)
+                        {
+                           print_error("send");
+                        }
                      }
-                     if(send(i, "\r\n", 2, MSG_NOSIGNAL) == -1)
-                     {
-                        print_error("send");
-                     }
-                     printf("%d: \"%s\"\r\n", pi, connection[pi].msgbuf);
+                     printf("%16s (%d): \"%s\"\r\n", getPlayer(pi)->name, pi, connection[pi].msgbuf);
                      switch(connection[pi].msgbuf[0])
                      {
                         case 'n':
@@ -361,12 +389,17 @@ void stepNetwork(void)
                            }
                            break;
                         }
-                        case 'e':
+                        case 'x':
                         {
-                           if(strcmp("exit", connection[pi].msgbuf) == 0)
+                           if(strcmp("xit", connection[pi].msgbuf) == 0)
                            {
                               exit(0);
                            }
+                           break;
+                        }
+                        case 'e':
+                        {
+                           connection[pi].echo = !connection[pi].echo;
                            break;
                         }
                         default:

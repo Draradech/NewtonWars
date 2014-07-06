@@ -12,7 +12,7 @@
 typedef struct
 {
    rgb color;
-   char name[16];
+   double fadeout;
 } UiPlayer;
 
 static UiPlayer* uiPlayer;
@@ -59,7 +59,7 @@ static void drawPlayers(void)
       if(!pl->active) continue;
       glColor3d(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
 
-      sprintf(buffer, "%s%s (%d:%d)%s", p == getCurrentPlayer() ? "> " : "  ", uiPlayer[p].name, pl->kills, pl->deaths, p == getCurrentPlayer() ? " <" : "");
+      sprintf(buffer, "%s%s (%d:%d)%s", p == getCurrentPlayer() ? "> " : "  ", pl->name, pl->kills, pl->deaths, p == getCurrentPlayer() ? " <" : "");
       if(conf.oneline)
       {
          glRasterPos2d(p * screenW / conf.maxPlayers + 3.0, 15.0);
@@ -95,12 +95,21 @@ static void display(void)
    {
       SimPlayer* pl = getPlayer(p);
       if(!pl->active) continue;
+      uiPlayer[p].fadeout = LIMIT(uiPlayer[p].fadeout - 0.02, 0.0, 1.0);
       for(s = 0; s < conf.numShots; ++s)
       {
          double bright;
          SimShot* shot;
          shot = getShot(p, s);
+         if(shot->missile.live && shot->length < 4)
+         {
+            uiPlayer[p].fadeout = 1.0;
+         }
          bright = (double)(conf.numShots - s) / conf.numShots;
+         if(s > 0)
+         {
+            bright += uiPlayer[p].fadeout / conf.numShots;
+         }
          bright *= bright;
          glColor4d(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, bright);
          glBegin(GL_LINE_STRIP);
@@ -206,12 +215,6 @@ void stepInterface(void)
 {
    glutPostRedisplay();
    glutMainLoopEvent();
-}
-
-void updateName(int p, char* n)
-{
-   strncpy(uiPlayer[p].name, n, 15);
-   uiPlayer[p].name[15] = 0;
 }
 
 void updateZoom(double z)

@@ -1,6 +1,8 @@
 #include "simulation.h"
 
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 #include <time.h>
 #include <math.h>
 
@@ -9,6 +11,7 @@
 static SimPlanet* planet;
 static SimPlayer* player;
 static int currentPlayer;
+static char deathMessage[128];
 
 static void initPlanets(void)
 {
@@ -105,17 +108,18 @@ static void planetHit(SimShot* s)
    missileEnd(s);
 }
 
-static void playerHit(SimShot* s, int p)
+static void playerHit(SimShot* s, int p, int p2)
 {
    int pl;
-   player[currentPlayer].kills++;
-   player[p].deaths++;
-   initPlayer(p, 0);
+   player[p].kills++;
+   player[p2].deaths++;
+   initPlayer(p2, 0);
    missileEnd(s);
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
       player[pl].valid = 0;
    }
+   sprintf(deathMessage, "%s killed %s.", player[p].name, player[p2].name);
 }
 
 static void wallHit(SimShot* s)
@@ -183,7 +187,7 @@ static void simulate(void)
                   && (m->leftSource == 1)
                   )
                {
-                  playerHit(s, pl2);
+                  playerHit(s, pl, pl2);
                }
 
                if (  (l > 5.0)
@@ -253,6 +257,7 @@ void stepSimulation(void)
    if(player[currentPlayer].valid && !player[currentPlayer].didShoot)
    {
       player[currentPlayer].valid = 0;
+      player[currentPlayer].force = 10.0;
       player[currentPlayer].didShoot = 1;
       player[currentPlayer].currentShot = (player[currentPlayer].currentShot + 1) % conf.numShots;
       initShot(currentPlayer);
@@ -279,6 +284,12 @@ void updateAngle(int p, double a)
 void updateForce(int p, double f)
 {
    player[p].force = f;
+}
+
+void updateName(int p, char* n)
+{
+   strncpy(player[p].name, n, 15);
+   player[p].name[15] = 0;
 }
 
 void clearTraces(int p)
@@ -325,5 +336,16 @@ SimPlayer* getPlayer(int p)
 int getCurrentPlayer(void)
 {
    return currentPlayer;
+}
+
+int getDeathMessage(char* buf)
+{
+   if(strlen(deathMessage))
+   {
+      strcpy(buf, deathMessage);
+      deathMessage[0] = 0;
+      return 1;
+   }
+   return 0;
 }
 

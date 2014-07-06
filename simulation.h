@@ -31,6 +31,7 @@ typedef struct
    int active;
    int valid;
    int didShoot;
+   char name[16];
 } SimPlayer;
 
 typedef struct
@@ -44,6 +45,7 @@ void playerJoin(int p);
 void playerLeave(int p);
 void updateAngle(int p, double a);
 void updateForce(int p, double f);
+void updateName(int p, char* n);
 void clearTraces(int p);
 void reinitialize(void);
 
@@ -51,6 +53,7 @@ SimShot* getShot(int p, int s);
 SimPlanet* getPlanet(int i);
 SimPlayer* getPlayer(int p);
 int getCurrentPlayer(void);
+int getDeathMessage(char* buf);
 
 void initSimulation(void);
 void stepSimulation(void);
