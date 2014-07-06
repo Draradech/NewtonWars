@@ -10,7 +10,7 @@ void config(int* argc, char** argv)
    conf.segmentSteps = 50;
    conf.numShots = 16;
    conf.fastmode = 0;
-   conf.fullscreen = 0;
+   conf.fullscreen = 1;
    conf.oneline = 0;
    /*
    conf.battlefieldW = 1660.0;
