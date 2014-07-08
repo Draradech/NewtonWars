@@ -8,4 +8,3 @@ void initInterface(int* argc, char** argv);
 void stepInterface(void);
 
 #endif /* _INTERFACE_H_ */
-

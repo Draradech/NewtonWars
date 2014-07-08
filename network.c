@@ -48,7 +48,7 @@ char buf[128];
 char sendbuf[128];
 connection_t* connection;
 
-void print_error(const char* msg)
+static void print_error(const char* msg)
 {
    #if _WIN32
    LPVOID lpMsgBuf;
@@ -58,7 +58,7 @@ void print_error(const char* msg)
        FORMAT_MESSAGE_IGNORE_INSERTS,
        NULL,
        GetLastError(),
-       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+       MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
        (LPTSTR) &lpMsgBuf,
        0,
        NULL 
@@ -71,7 +71,7 @@ void print_error(const char* msg)
 }
 
 // get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
+static void *get_in_addr(struct sockaddr *sa)
 {
    if (sa->sa_family == AF_INET)
    {
@@ -81,15 +81,26 @@ void *get_in_addr(struct sockaddr *sa)
    return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+static void snd(int socket, char* msg)
+{
+   int flags;
+   #if defined __APPLE__ || defined _WIN32
+   flags = 0;
+   #else
+   flags = MSG_NOSIGNAL;
+   #endif
+   if(send(socket, msg, strlen(msg), flags) == -1)
+   {
+      print_error("send");
+   }
+}
+
 void initNetwork(void)
 {
    struct addrinfo hints, *ai, *p;
    int yes = 1;
    int no = 0;
    int rv;
-   
-   connection = malloc(conf.maxPlayers * sizeof(connection_t));
-   memset(connection, 0, conf.maxPlayers * sizeof(connection_t));
    
    #ifdef _WIN32
    WSADATA wsaData;
@@ -99,6 +110,9 @@ void initNetwork(void)
       exit(1);
    }
    #endif
+
+   connection = malloc(conf.maxPlayers * sizeof(connection_t));
+   memset(connection, 0, conf.maxPlayers * sizeof(connection_t));
 
    FD_ZERO(&master);
    FD_ZERO(&readfds);
@@ -127,14 +141,14 @@ void initNetwork(void)
          continue;
       }
 
-      if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
+      if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, (void *)&yes, sizeof(yes)) == -1)
       {
          print_error("setsockopt reuse");
          continue;
       }
-   
+
       // only interested if dualstack
-      if (setsockopt(listener, IPPROTO_IPV6, IPV6_V6ONLY, &no, sizeof(no)) == -1)
+      if (setsockopt(listener, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&no, sizeof(no)) == -1)
       {
          print_error("setsockopt dualstack");
          continue;
@@ -166,9 +180,9 @@ void initNetwork(void)
             continue;
          }
 
-         if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes)) == -1)
+         if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, (void *)&yes, sizeof(yes)) == -1)
          {
-            print_error("setsockopt");
+            print_error("setsockopt reuse");
             continue;
          }
 
@@ -209,7 +223,20 @@ void stepNetwork(void)
    struct sockaddr_storage remoteaddr;
    socklen_t addrlen;
    struct timeval tv;
-   
+
+   if(getDeathMessage(sendbuf))
+   {
+      for(k = 0; k < conf.maxPlayers; ++k)
+      {
+         if(connection[k].socket)
+         {
+            snd(connection[k].socket, "\r\n");
+            snd(connection[k].socket, sendbuf);
+            snd(connection[k].socket, "\r\n> ");
+         }
+      }
+   }
+
    tv.tv_sec = 0;
    tv.tv_usec = 1;
    readfds = master;
@@ -218,29 +245,7 @@ void stepNetwork(void)
       print_error("select");
       exit(5);
    }
-   
-   if(getDeathMessage(sendbuf))
-   {
-      for(k = 0; k < conf.maxPlayers; ++k)
-      {
-         if(connection[k].socket)
-         {
-            if(send(connection[k].socket, "\r\n", 2, MSG_NOSIGNAL) == -1)
-            {
-               print_error("send");
-            }
-            if(send(connection[k].socket, sendbuf, strlen(sendbuf), MSG_NOSIGNAL) == -1)
-            {
-               print_error("send");
-            }
-            if(send(connection[k].socket, "\r\n> ", 4, MSG_NOSIGNAL) == -1)
-            {
-               print_error("send");
-            }
-         }
-      }
-   }
-   
+
    for(i = 0; i <= fdmax; ++i)
    {
       if(FD_ISSET(i, &readfds))
@@ -279,10 +284,7 @@ void stepNetwork(void)
                      fdmax = newfd;
                   }
                   printf("new connection from %s on socket %d accepted\r\n", remoteIP, newfd);
-                  if(send(newfd, WELCOME, strlen(WELCOME), MSG_NOSIGNAL) == -1)
-                  {
-                     print_error("send");
-                  }
+                  snd(newfd, WELCOME);
                }
             }
          }
@@ -344,14 +346,8 @@ void stepNetwork(void)
                      connection[pi].msgbufindex = 0;
                      if(connection[pi].echo)
                      {
-                        if(send(i, connection[pi].msgbuf, strlen(connection[pi].msgbuf), MSG_NOSIGNAL) == -1)
-                        {
-                           print_error("send");
-                        }
-                        if(send(i, "\r\n", 2, MSG_NOSIGNAL) == -1)
-                        {
-                           print_error("send");
-                        }
+                        snd(i, connection[pi].msgbuf);
+                        snd(i, "\r\n");
                      }
                      printf("%16s (%d): \"%s\"\r\n", getPlayer(pi)->name, pi, connection[pi].msgbuf);
                      switch(connection[pi].msgbuf[0])
@@ -409,10 +405,7 @@ void stepNetwork(void)
                         }
                      }
 
-                     if(send(i, "> ", 2, MSG_NOSIGNAL) == -1)
-                     {
-                        print_error("send");
-                     }
+                     snd(i, "> ");
                   }
                }
             }

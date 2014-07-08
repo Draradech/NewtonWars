@@ -22,4 +22,3 @@ extern Config conf;
 void config(int* argc, char** argv);
 
 #endif /* _CONFIG_H_ */
-

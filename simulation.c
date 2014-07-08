@@ -132,7 +132,7 @@ static void initShot(int pl)
    SimPlayer*  p = &(player[pl]);
    SimShot*    s = &(p->shot[p->currentShot]);
    SimMissile* m = &(s->missile);
-   
+
    m->position = p->position;
    m->speed.x = p->force * cos(p->angle / 180.0 * M_PI);
    m->speed.y = p->force * -sin(p->angle / 180.0 * M_PI);
@@ -152,13 +152,13 @@ static void simulate(void)
    {
       for(pl = 0; pl < conf.maxPlayers; ++pl)
       {
-         if(!player[pl].active) continue;
          SimPlayer* p = &(player[pl]);
+         if(!p->active) continue;
          for(sh = 0; sh < conf.numShots; ++sh)
          {
-            if(!p->shot[sh].missile.live) continue;
             SimShot* s = &(p->shot[sh]);
             SimMissile* m = &(s->missile);
+            if(!m->live) continue;
             for(j = 0; j < conf.numPlanets; ++j)
             {
                v = vsub(planet[j].position, m->position);
@@ -211,12 +211,12 @@ static void simulate(void)
    }
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
-      if(!player[pl].active) continue;
       SimPlayer* p = &(player[pl]);
+      if(!p->active) continue;
       for(sh = 0; sh < conf.numShots; ++sh)
       {
-         if(!p->shot[sh].missile.live) continue;
          SimShot* s = &(p->shot[sh]);
+         if(!s->missile.live) continue;
          s->dot[s->length++] = s->missile.position;
          if(s->length == conf.maxSegments)
          {
@@ -256,11 +256,11 @@ void stepSimulation(void)
    }
    if(player[currentPlayer].valid && !player[currentPlayer].didShoot)
    {
+      player[currentPlayer].currentShot = (player[currentPlayer].currentShot + 1) % conf.numShots;
+      initShot(currentPlayer);
       player[currentPlayer].valid = 0;
       player[currentPlayer].force = 10.0;
       player[currentPlayer].didShoot = 1;
-      player[currentPlayer].currentShot = (player[currentPlayer].currentShot + 1) % conf.numShots;
-      initShot(currentPlayer);
    }
    simulate();
 }
@@ -348,4 +348,3 @@ int getDeathMessage(char* buf)
    }
    return 0;
 }
-

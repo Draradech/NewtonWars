@@ -5,4 +5,3 @@ void initNetwork(void);
 void stepNetwork(void);
 
 #endif /* _NETWORK_H_ */
-

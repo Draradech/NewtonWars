@@ -125,6 +125,5 @@ rgb hsv2rgb(hsv in)
          break;
       }
    }
-   return out;     
+   return out;
 }
-

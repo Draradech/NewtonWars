@@ -9,6 +9,10 @@
 #include "config.h"
 #include "color.h"
 
+#ifndef GL_MULTISAMPLE
+#define GL_MULTISAMPLE  0x809D
+#endif
+
 typedef struct
 {
    rgb color;
@@ -174,6 +178,8 @@ static void reshape(int w, int h)
 
 void initInterface(int* argc, char** argv)
 {
+   int p;
+
    glutInit(argc, argv);
 
    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
@@ -199,7 +205,6 @@ void initInterface(int* argc, char** argv)
 
    uiPlayer = malloc(conf.maxPlayers * sizeof(UiPlayer));
 
-   int p;
    for(p = 0; p < conf.maxPlayers; ++p)
    {
       hsv color;
@@ -226,4 +231,3 @@ void toggleFps(void)
 {
    fps = !fps;
 }
-

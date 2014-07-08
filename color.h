@@ -19,4 +19,3 @@ hsv rgb2hsv(rgb in);
 rgb hsv2rgb(hsv in);
 
 #endif /* _COLOR_H_ */
-

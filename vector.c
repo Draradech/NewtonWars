@@ -42,4 +42,3 @@ double distance(Vec2d v1, Vec2d v2)
 {
    return length(vsub(v1, v2));
 }
-
