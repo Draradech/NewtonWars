@@ -4,7 +4,7 @@
 #include "config.h"
 #include "network.h"
 #include "simulation.h"
-#include "interface.h"
+#include "display.h"
 
 int main(int argc, char** argv)
 {
@@ -13,13 +13,13 @@ int main(int argc, char** argv)
 
    initNetwork();
    initSimulation();
-   initInterface(&argc, argv);
+   initDisplay(&argc, argv);
 
    for(;;)
    {
       stepNetwork();
       stepSimulation();
-      stepInterface();
+      stepDisplay();
    };
 
    return 0;

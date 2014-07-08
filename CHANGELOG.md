@@ -1,5 +1,13 @@
 Changelog
 =========
+2014-07-08
+----------
+ * fix windows and mac compatibility
+ * remove fake Makefile
+ * add build scripts
+ * fix force/velocity
+ * rename interface to display
+ * rename force to velocity
 
 2014-07-06
 ----------

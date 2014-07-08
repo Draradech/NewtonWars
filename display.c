@@ -1,4 +1,4 @@
-#include "simulation.h"
+#include "display.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include "color.h"
+#include "simulation.h"
 
 #ifndef GL_MULTISAMPLE
 #define GL_MULTISAMPLE  0x809D
@@ -176,7 +177,7 @@ static void reshape(int w, int h)
    }
 }
 
-void initInterface(int* argc, char** argv)
+void initDisplay(int* argc, char** argv)
 {
    int p;
 
@@ -208,7 +209,7 @@ void initInterface(int* argc, char** argv)
    for(p = 0; p < conf.maxPlayers; ++p)
    {
       hsv color;
-      color.h = 360.0 / conf.maxPlayers * p;
+      color.h = 360.0 / conf.maxPlayers * (p + 0.5);
       color.s = 0.8;
       color.v = 1.0;
       uiPlayer[p].color = hsv2rgb(color);
@@ -216,7 +217,7 @@ void initInterface(int* argc, char** argv)
    zoom = 0.8;
 }
 
-void stepInterface(void)
+void stepDisplay(void)
 {
    glutPostRedisplay();
    glutMainLoopEvent();

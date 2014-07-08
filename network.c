@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include "simulation.h"
-#include "interface.h"
+#include "display.h"
 
 #ifdef _WIN32
 #define close closesocket
