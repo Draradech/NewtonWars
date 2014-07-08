@@ -32,7 +32,7 @@
 
 #define PORT "3490"
 #define BACKLOG 4
-#define WELCOME "\r\nUse \"n name\" to change name, \"f force\" to change force or \"c\" to clear past shots.\r\nEverything else is interpreted as a shooting angle.\r\n\r\n> "
+#define WELCOME "\r\nUse \"n name\" to change name, \"v velocity\" to change velocity or \"c\" to clear past shots.\r\nEverything else is interpreted as a shooting angle.\r\n\r\n> "
 
 typedef struct
 {
@@ -357,9 +357,9 @@ void stepNetwork(void)
                            updateName(pi, connection[pi].msgbuf + 2);
                            break;
                         }
-                        case 'f':
+                        case 'v':
                         {
-                           updateForce(pi, atof(connection[pi].msgbuf + 2));
+                           updateVelocity(pi, atof(connection[pi].msgbuf + 2));
                            break;
                         }
                         case 'z':
@@ -372,7 +372,7 @@ void stepNetwork(void)
                            clearTraces(pi);
                            break;
                         }
-                        case 'r':
+                        case 'f':
                         {
                            toggleFps();
                            break;

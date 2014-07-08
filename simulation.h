@@ -24,7 +24,7 @@ typedef struct
    int currentShot;
    Vec2d position;
    double angle;
-   double force;
+   double velocity;
    int deaths;
    int kills;
    int shots;
@@ -44,7 +44,7 @@ typedef struct
 void playerJoin(int p);
 void playerLeave(int p);
 void updateAngle(int p, double a);
-void updateForce(int p, double f);
+void updateVelocity(int p, double v);
 void updateName(int p, char* n);
 void clearTraces(int p);
 void reinitialize(void);

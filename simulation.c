@@ -45,7 +45,7 @@ static void initPlayer(int p, int clear)
    if(clear)
    {
       player[p].angle = 0.0;
-      player[p].force = 10.0;
+      player[p].velocity = 10.0;
       player[p].deaths = 0;
       player[p].kills = 0;
       player[p].shots = 0;
@@ -134,8 +134,8 @@ static void initShot(int pl)
    SimMissile* m = &(s->missile);
 
    m->position = p->position;
-   m->speed.x = p->force * cos(p->angle / 180.0 * M_PI);
-   m->speed.y = p->force * -sin(p->angle / 180.0 * M_PI);
+   m->speed.x = p->velocity * cos(p->angle / 180.0 * M_PI);
+   m->speed.y = p->velocity * -sin(p->angle / 180.0 * M_PI);
    m->live = 1;
    m->leftSource = 0;
    s->dot[0] = m->position;
@@ -259,7 +259,7 @@ void stepSimulation(void)
       player[currentPlayer].currentShot = (player[currentPlayer].currentShot + 1) % conf.numShots;
       initShot(currentPlayer);
       player[currentPlayer].valid = 0;
-      player[currentPlayer].force = 10.0;
+      player[currentPlayer].velocity = 10.0;
       player[currentPlayer].didShoot = 1;
    }
    simulate();
@@ -281,9 +281,9 @@ void updateAngle(int p, double a)
    player[p].valid = 1;  
 }
 
-void updateForce(int p, double f)
+void updateVelocity(int p, double v)
 {
-   player[p].force = f;
+   player[p].velocity = v;
 }
 
 void updateName(int p, char* n)
