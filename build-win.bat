@@ -1,2 +1,2 @@
-cl /Fenw.exe /I../freeglut/include /D_USE_MATH_DEFINES *.c /link /LIBPATH:../freeglut/lib ws2_32.lib
+cl /Fenw.exe /I../freeglut/include /D_USE_MATH_DEFINES color.c  config.c  display.c  main.c  network.c  simulation.c  vector.c /link /LIBPATH:../freeglut/lib ws2_32.lib
 del *.obj
