@@ -9,7 +9,6 @@ void config(int* argc, char** argv)
    conf.maxSegments = 2000;
    conf.segmentSteps = 50;
    conf.numShots = 16;
-   conf.fastmode = 0;
    conf.fullscreen = 1;
    conf.oneline = 0;
    /*

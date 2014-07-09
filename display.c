@@ -4,39 +4,71 @@
 #include <string.h>
 #include <math.h>
 
+#if defined TARGET_GLUT
 #include <GL/freeglut.h>
+#ifndef GL_MULTISAMPLE
+#define GL_MULTISAMPLE  0x809D
+#endif
+#elif defined TARGET_RASPI
+#include <assert.h>
+#include <bcm_host.h>
+#include <GLES/gl.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <sys/time.h>
+#include <time.h>
+#endif
 
 #include "config.h"
 #include "color.h"
 #include "simulation.h"
 
-#ifndef GL_MULTISAMPLE
-#define GL_MULTISAMPLE  0x809D
+#if defined TARGET_RASPI
+#define glOrtho glOrthof
 #endif
+
+static void initSystem(int* argc, char** argv);
+static void drawString15(char* str, float x, float y, float r, float g, float b);
+static void swapBuffers(void);
 
 typedef struct
 {
    rgb color;
-   double fadeout;
+   float fadeout;
 } UiPlayer;
 
 static UiPlayer* uiPlayer;
-
-static double left, right, bottom, top, zoom;
+static float* renderBuffer;
+static float vertCircle[32][3];
+static float left, right, bottom, top, zoom;
 static int screenW, screenH;
 static int fps;
+
+#if defined TARGET_RASPI
+static EGLDisplay display;
+static EGLSurface surface;
+static EGLContext context;
+#endif
 
 static void drawFps(void)
 {
    static unsigned long timeOld;
    static int frameCounter;
-   static double dfps;
+   static float dfps;
 
    unsigned long time;
+   #if defined TARGET_RASPI
+   struct timeval tv;
+   #endif
    char buffer[16];
 
    frameCounter++;
+   #if defined TARGET_RASPI
+   gettimeofday(&tv, 0);
+   time = 1000 * tv.tv_sec + tv.tv_usec / 1000;
+   #elif defined TARGET_GLUT
    time = glutGet(GLUT_ELAPSED_TIME);
+   #endif
 
    if(time > timeOld + 500)
    {
@@ -47,33 +79,33 @@ static void drawFps(void)
    }
 
    sprintf(buffer, "%.1lf fps", dfps);
-
-   glColor3f(1.0, 1.0, 1.0);
-   glRasterPos2d(3.0, 30.0);
-   glutBitmapString(GLUT_BITMAP_9_BY_15, (unsigned char*)buffer);
+   
+   drawString15(buffer, 3.0, 30.0, 1.0, 1.0, 1.0);
 }
 
 static void drawPlayers(void)
 {
    static char buffer[128];
+   float x, y;
    int p;
 
    for(p = 0; p < conf.maxPlayers; ++p)
    {
       SimPlayer* pl = getPlayer(p);
       if(!pl->active) continue;
-      glColor3d(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
 
       sprintf(buffer, "%s%s (%d:%d)%s", p == getCurrentPlayer() ? "> " : "  ", pl->name, pl->kills, pl->deaths, p == getCurrentPlayer() ? " <" : "");
       if(conf.oneline)
       {
-         glRasterPos2d(p * screenW / conf.maxPlayers + 3.0, 15.0);
+         x = p * (float)screenW / conf.maxPlayers + 3.0;
+         y = 15.0;
       }
       else
       {
-         glRasterPos2d((p / 2) * (screenW / ((conf.maxPlayers + 1) / 2)) + 3.0, (p % 2) ? screenH - 6.0 : 15.0);
+         x = (p / 2) * ((float)screenW / ((conf.maxPlayers + 1) / 2)) + 3.0;
+         y = (p % 2) ? screenH - 6.0 : 15.0;
       }
-      glutBitmapString(GLUT_BITMAP_9_BY_15, (unsigned char*)buffer);
+      drawString15(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
    }
 }
 
@@ -92,9 +124,11 @@ static void display(void)
 
    glClear(GL_COLOR_BUFFER_BIT);
 
-   glTranslated((right - left) / 2, (bottom - top) / 2, 0);
-   glScaled(zoom, zoom, zoom);
-   glTranslated((left - right) / 2, (top - bottom) / 2, 0);
+   glTranslatef((right - left) / 2, (bottom - top) / 2, 0);
+   glScalef(zoom, zoom, zoom);
+   glTranslatef((left - right) / 2, (top - bottom) / 2, 0);
+
+   glEnableClientState(GL_VERTEX_ARRAY);
 
    for(p = 0; p < conf.maxPlayers; ++p)
    {
@@ -116,28 +150,36 @@ static void display(void)
             bright += uiPlayer[p].fadeout / conf.numShots;
          }
          bright *= bright;
-         glColor4d(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, bright);
-         glBegin(GL_LINE_STRIP);
          for(i = 0; i < shot->length; ++i)
          {
-            glVertex2d(shot->dot[i].x, shot->dot[i].y);
+            renderBuffer[i*3] = shot->dot[i].x;
+            renderBuffer[i*3+1] = shot->dot[i].y;
+            renderBuffer[i*3+2] = 0;
          }
-         glEnd();
+         glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, bright);
+         glVertexPointer(3, GL_FLOAT, 0, renderBuffer);
+         glDrawArrays(GL_LINE_STRIP, 0, shot->length);
       }
-      glColor3d(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
+      glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, 1.0f);
       glPushMatrix();
-      glTranslated(pl->position.x, pl->position.y, 0);
-      glutWireSphere(4.0, 16, 2);
+      glTranslatef(pl->position.x, pl->position.y, 0);
+      glScalef(4.0, 4.0, 1.0);
+      glVertexPointer(3, GL_FLOAT, 0, vertCircle);
+      glDrawArrays(GL_LINE_LOOP, 0, 16);
+      glDrawArrays(GL_LINES, 16, 16);
       glPopMatrix();
    }
 
-   glColor3d(0.3, 0.3, 0.3);
+   glColor4f(0.3, 0.3, 0.3, 1.0);
    for(i = 0; i < conf.numPlanets; ++i)
    {
       SimPlanet* p = getPlanet(i);
       glPushMatrix();
-      glTranslated(p->position.x, p->position.y, 0);
-      glutWireSphere(p->radius, 16, 2);
+      glTranslatef(p->position.x, p->position.y, 0);
+      glScalef(p->radius, p->radius, 1.0);
+      glVertexPointer(3, GL_FLOAT, 0, vertCircle);
+      glDrawArrays(GL_LINE_LOOP, 0, 16);
+      glDrawArrays(GL_LINES, 16, 16);
       glPopMatrix();
    }
 
@@ -151,8 +193,7 @@ static void display(void)
    if(fps) drawFps();
    drawPlayers();
 
-   glFlush();
-   glutSwapBuffers();
+   swapBuffers();
 }
 
 static void reshape(int w, int h)
@@ -179,12 +220,58 @@ static void reshape(int w, int h)
 
 void initDisplay(int* argc, char** argv)
 {
-   int p;
+   int p, i;
 
+   initSystem(argc, argv);
+
+   uiPlayer = malloc(conf.maxPlayers * sizeof(UiPlayer));
+   renderBuffer = malloc(conf.maxSegments * 3 * sizeof(float));
+
+   for(p = 0; p < conf.maxPlayers; ++p)
+   {
+      hsv color;
+      color.h = 360.0 / conf.maxPlayers * p;
+      color.s = 0.8;
+      color.v = 1.0;
+      uiPlayer[p].color = hsv2rgb(color);
+   }
+   zoom = 0.8;
+
+   for(i = 0; i < 8; ++i)
+   {
+      double a = 2 * M_PI / 32 + 2 * M_PI / 16 * i;
+      float x = sin(a);
+      float y = cos(a);
+      vertCircle[i][0] = x;
+      vertCircle[i][1] = y;
+      vertCircle[i][2] = 0.0;
+      vertCircle[8 + i][0] = -x;
+      vertCircle[8 + i][1] = -y;
+      vertCircle[8 + i][2] = 0.0;
+      vertCircle[16 + 2 * i][0] = x;
+      vertCircle[16 + 2 * i][1] = y;
+      vertCircle[16 + 2 * i][2] = 0.0;
+      vertCircle[16 + 2 * i + 1][0] = -x;
+      vertCircle[16 + 2 * i + 1][1] = -y;
+      vertCircle[16 + 2 * i + 1][2] = 0.0;
+   }
+}
+
+void updateZoom(double z)
+{
+   zoom = LIMIT(z, 0.0, 1.0);
+}
+
+void toggleFps(void)
+{
+   fps = !fps;
+}
+
+#if defined TARGET_GLUT
+static void initSystem(int* argc, char ** argv)
+{
    glutInit(argc, argv);
-
    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
-
    glutCreateWindow("NewtonWars");
 
    if(conf.fullscreen)
@@ -203,18 +290,19 @@ void initDisplay(int* argc, char** argv)
    glEnable(GL_MULTISAMPLE);
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
 
-   uiPlayer = malloc(conf.maxPlayers * sizeof(UiPlayer));
+static void drawString15(char* str, float x, float y, float r, float g, float b)
+{
+   glColor3d(r, g, b);
+   glRasterPos2d(x, y);
+   glutBitmapString(GLUT_BITMAP_9_BY_15, (unsigned char*)str);
+}
 
-   for(p = 0; p < conf.maxPlayers; ++p)
-   {
-      hsv color;
-      color.h = 360.0 / conf.maxPlayers * (p + 0.5);
-      color.s = 0.8;
-      color.v = 1.0;
-      uiPlayer[p].color = hsv2rgb(color);
-   }
-   zoom = 0.8;
+static void swapBuffers()
+{
+   glFlush();
+   glutSwapBuffers();
 }
 
 void stepDisplay(void)
@@ -223,12 +311,98 @@ void stepDisplay(void)
    glutMainLoopEvent();
 }
 
-void updateZoom(double z)
+#elif defined TARGET_RASPI
+
+void initSystem(int* argc, char** argv)
 {
-   zoom = LIMIT(z, 0.0, 1.0);
+   int success = 0;
+   EGLBoolean result;
+   EGLint num_config;
+
+   static EGL_DISPMANX_WINDOW_T nativewindow;
+
+   DISPMANX_ELEMENT_HANDLE_T dispman_element;
+   DISPMANX_DISPLAY_HANDLE_T dispman_display;
+   DISPMANX_UPDATE_HANDLE_T dispman_update;
+   VC_RECT_T dst_rect;
+   VC_RECT_T src_rect;
+
+   static const EGLint attribute_list[] =
+   {
+      EGL_RED_SIZE, 8,
+      EGL_GREEN_SIZE, 8,
+      EGL_BLUE_SIZE, 8,
+      EGL_ALPHA_SIZE, 8,
+      EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+      EGL_NONE
+   };
+
+   EGLConfig config;
+
+   bcm_host_init();
+
+   // get an EGL display connection
+   display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+   assert(display!=EGL_NO_DISPLAY);
+
+   // initialize the EGL display connection
+   result = eglInitialize(display, NULL, NULL);
+   assert(EGL_FALSE != result);
+
+   // get an appropriate EGL frame buffer configuration
+   result = eglChooseConfig(display, attribute_list, &config, 1, &num_config);
+   assert(EGL_FALSE != result);
+
+   // create an EGL rendering context
+   context = eglCreateContext(display, config, EGL_NO_CONTEXT, NULL);
+   assert(context!=EGL_NO_CONTEXT);
+
+   // create an EGL window surface
+   success = graphics_get_display_size(0, (uint32_t*)&screenW, (uint32_t*)&screenH);
+   assert(success >= 0);
+
+   dst_rect.x = 0;
+   dst_rect.y = 0;
+   dst_rect.width = screenW;
+   dst_rect.height = screenH;
+
+   src_rect.x = 0;
+   src_rect.y = 0;
+   src_rect.width = screenW << 16;
+   src_rect.height = screenH << 16;
+
+   dispman_display = vc_dispmanx_display_open(0);
+   dispman_update = vc_dispmanx_update_start(0);
+
+   dispman_element = vc_dispmanx_element_add(dispman_update, dispman_display, 0/*layer*/, &dst_rect, 0/*src*/,
+      &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, 0/*transform*/);
+
+   nativewindow.element = dispman_element;
+   nativewindow.width = screenW;
+   nativewindow.height = screenH;
+   vc_dispmanx_update_submit_sync(dispman_update);
+
+   surface = eglCreateWindowSurface(display, config, &nativewindow, NULL);
+   assert(surface != EGL_NO_SURFACE);
+
+   // connect the context to the surface
+   result = eglMakeCurrent(display, surface, surface, context);
+   assert(EGL_FALSE != result);
+   
+   reshape(screenW, screenH);
 }
 
-void toggleFps(void)
+static void drawString15(char* str, float x, float y, float r, float g, float b)
 {
-   fps = !fps;
 }
+
+void swapBuffers(void)
+{
+   eglSwapBuffers(display, surface);
+}
+
+void stepDisplay(void)
+{
+   display();
+}
+#endif
