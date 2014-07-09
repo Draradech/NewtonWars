@@ -8,7 +8,7 @@ void config(int* argc, char** argv)
    conf.numPlanets = 32;
    conf.maxSegments = 2000;
    conf.segmentSteps = 50;
-   conf.numShots = 16;
+   conf.numShots = 24;
    conf.fullscreen = 1;
    conf.oneline = 0;
    /*

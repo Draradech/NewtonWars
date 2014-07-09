@@ -19,6 +19,9 @@
 #include <time.h>
 #endif
 
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
 #include "config.h"
 #include "color.h"
 #include "simulation.h"
@@ -28,7 +31,7 @@
 #endif
 
 static void initSystem(int* argc, char** argv);
-static void drawString15(char* str, float x, float y, float r, float g, float b);
+static void drawString(char* str, float x, float y, int size, float r, float g, float b);
 static void swapBuffers(void);
 
 typedef struct
@@ -39,6 +42,7 @@ typedef struct
 
 static UiPlayer* uiPlayer;
 static float* renderBuffer;
+static FT_Face face;
 static float vertCircle[32][3];
 static float left, right, bottom, top, zoom;
 static int screenW, screenH;
@@ -49,6 +53,93 @@ static EGLDisplay display;
 static EGLSurface surface;
 static EGLContext context;
 #endif
+
+static GLubyte transformer[1000000];
+
+static void drawString(char* str, float x, float y, int size, float r, float g, float b)
+{
+   int gy, gx;
+   const char *p;
+   FT_GlyphSlot gl = face->glyph;
+
+   FT_Set_Pixel_Sizes(face, 0, size *16);
+   
+   glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+   /* Create a texture that will be used to hold one "glyph" */
+   GLuint tex;
+   glActiveTexture(GL_TEXTURE0);
+   glGenTextures(1, &tex);
+   glBindTexture(GL_TEXTURE_2D, tex);
+
+   /* We require 1 byte alignment when uploading texture data */
+   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+   /* Clamping to edges is important to prevent artifacts when scaling */
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+   /* Linear filtering usually looks best for text */
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   
+   glColor4f(r, g, b, 1.0);
+
+   /* Loop through all characters */
+   for (p = str; *p; p++)
+   {
+      /* Try to load and render the character */
+      if (FT_Load_Char(face, *p, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT))
+      {
+         continue;
+      }
+      
+      for(gy = 0; gy < gl->bitmap.rows; ++gy)
+      {
+         for(gx = 0; gx < gl->bitmap.width; ++gx)
+         {
+            transformer[(gy * gl->bitmap.width + gx) * 4 + 0] = gl->bitmap.buffer[gy * gl->bitmap.width + gx];
+            transformer[(gy * gl->bitmap.width + gx) * 4 + 1] = gl->bitmap.buffer[gy * gl->bitmap.width + gx];
+            transformer[(gy * gl->bitmap.width + gx) * 4 + 2] = gl->bitmap.buffer[gy * gl->bitmap.width + gx];
+            transformer[(gy * gl->bitmap.width + gx) * 4 + 3] = gl->bitmap.buffer[gy * gl->bitmap.width + gx];
+         }
+      }
+      
+      /* Upload the "bitmap", which contains an 8-bit grayscale image, as an alpha texture */
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, gl->bitmap.width, gl->bitmap.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, transformer);
+      
+      /* Calculate the vertex and texture coordinates */
+      float x2 = x + gl->bitmap_left/16.0;
+      float y2 = y - gl->bitmap_top/16.0;
+      float w = gl->bitmap.width/16.0;
+      float h = gl->bitmap.rows/16.0;
+      float vert[] =
+      {
+         x2, y2,
+         x2 + w, y2,
+         x2, y2 + h,
+         x2 + w, y2 + h,
+      };
+      float texc[] =
+      {
+         0, 0,
+         1, 0,
+         0, 1,
+         1, 1,
+      };
+      
+      /* Draw the character on the screen */
+      glVertexPointer(2, GL_FLOAT, 0, vert);
+      glTexCoordPointer(2, GL_FLOAT, 0, texc);
+      glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+      
+      /* Advance the cursor to the start of the next character */
+      x += (gl->advance.x/16.0 /64);
+      y += (gl->advance.y/16.0 /64);
+   }
+   glDeleteTextures(1, &tex);
+   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+}
 
 static void drawFps(void)
 {
@@ -79,8 +170,8 @@ static void drawFps(void)
    }
 
    sprintf(buffer, "%.1lf fps", dfps);
-   
-   drawString15(buffer, 3.0, 30.0, 1.0, 1.0, 1.0);
+
+   drawString(buffer, 3.0, 30.0, 18, 1.0, 1.0, 1.0);
 }
 
 static void drawPlayers(void)
@@ -105,11 +196,11 @@ static void drawPlayers(void)
          x = (p / 2) * ((float)screenW / ((conf.maxPlayers + 1) / 2)) + 3.0;
          y = (p % 2) ? screenH - 6.0 : 15.0;
       }
-      drawString15(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
+      drawString(buffer, x, y, 18, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
    }
 }
 
-static void display(void)
+static void draw(void)
 {
    int i, p, s;
 
@@ -223,7 +314,23 @@ void initDisplay(int* argc, char** argv)
    int p, i;
 
    initSystem(argc, argv);
+   glEnable(GL_BLEND);
+   glEnable(GL_TEXTURE_2D);
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glClearColor(0.0, 0.0, 0.0, 1.0);
 
+   FT_Library ft;
+
+   if(FT_Init_FreeType(&ft))
+   {
+      fprintf(stderr, "Could not init freetype library\n");
+   }
+
+   if(FT_New_Face(ft, "UbuntuMono-B.ttf", 0, &face))
+   {
+      fprintf(stderr, "Could not open font\n");
+   }
+   
    uiPlayer = malloc(conf.maxPlayers * sizeof(UiPlayer));
    renderBuffer = malloc(conf.maxSegments * 3 * sizeof(float));
 
@@ -284,12 +391,10 @@ static void initSystem(int* argc, char ** argv)
       glutReshapeWindow(800, 600);
    }
 
-   glutDisplayFunc(display);
+   glutDisplayFunc(draw);
    glutReshapeFunc(reshape);
 
    glEnable(GL_MULTISAMPLE);
-   glEnable(GL_BLEND);
-   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 static void drawString15(char* str, float x, float y, float r, float g, float b)
@@ -388,7 +493,7 @@ void initSystem(int* argc, char** argv)
    // connect the context to the surface
    result = eglMakeCurrent(display, surface, surface, context);
    assert(EGL_FALSE != result);
-   
+
    reshape(screenW, screenH);
 }
 
@@ -403,6 +508,6 @@ void swapBuffers(void)
 
 void stepDisplay(void)
 {
-   display();
+   draw();
 }
 #endif
