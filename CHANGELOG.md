@@ -1,5 +1,9 @@
 Changelog
 =========
+2014-07-10
+----------
+ * add font rendering to unified renderer
+
 2014-07-09
 ----------
  * added raspberry pi support
