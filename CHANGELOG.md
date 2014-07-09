@@ -1,5 +1,10 @@
 Changelog
 =========
+2014-07-09
+----------
+ * added raspberry pi support
+ * unified renderer working for glut and raspberry pi targets
+
 2014-07-08
 ----------
  * fix windows and mac compatibility
