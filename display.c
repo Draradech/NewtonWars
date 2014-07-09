@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #if defined TARGET_GLUT
 #include <GL/freeglut.h>
@@ -10,7 +11,6 @@
 #define GL_MULTISAMPLE  0x809D
 #endif
 #elif defined TARGET_RASPI
-#include <assert.h>
 #include <bcm_host.h>
 #include <GLES/gl.h>
 #include <EGL/egl.h>
@@ -18,9 +18,6 @@
 #include <sys/time.h>
 #include <time.h>
 #endif
-
-#include <ft2build.h>
-#include FT_FREETYPE_H
 
 #include "config.h"
 #include "color.h"
@@ -31,7 +28,6 @@
 #endif
 
 static void initSystem(int* argc, char** argv);
-static void drawString(char* str, float x, float y, int size, float r, float g, float b);
 static void swapBuffers(void);
 
 typedef struct
@@ -42,8 +38,8 @@ typedef struct
 
 static UiPlayer* uiPlayer;
 static float* renderBuffer;
-static FT_Face face;
-static float vertCircle[32][3];
+static GLuint tex;
+static float vertCircle[32][2];
 static float left, right, bottom, top, zoom;
 static int screenW, screenH;
 static int fps;
@@ -54,78 +50,33 @@ static EGLSurface surface;
 static EGLContext context;
 #endif
 
-static GLubyte transformer[1000000];
-
-static void drawString(char* str, float x, float y, int size, float r, float g, float b)
+static void drawString(char* str, float x, float y, float r, float g, float b)
 {
-   int gy, gx;
    const char *p;
-   FT_GlyphSlot gl = face->glyph;
 
-   FT_Set_Pixel_Sizes(face, 0, size *16);
-   
+   glEnable(GL_TEXTURE_2D);
    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-   /* Create a texture that will be used to hold one "glyph" */
-   GLuint tex;
-   glActiveTexture(GL_TEXTURE0);
-   glGenTextures(1, &tex);
    glBindTexture(GL_TEXTURE_2D, tex);
 
-   /* We require 1 byte alignment when uploading texture data */
-   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-   /* Clamping to edges is important to prevent artifacts when scaling */
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-   /* Linear filtering usually looks best for text */
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-   
    glColor4f(r, g, b, 1.0);
 
    /* Loop through all characters */
-   for (p = str; *p; p++)
+   for (p = str; *p; ++p)
    {
-      /* Try to load and render the character */
-      if (FT_Load_Char(face, *p, FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT))
-      {
-         continue;
-      }
-      
-      for(gy = 0; gy < gl->bitmap.rows; ++gy)
-      {
-         for(gx = 0; gx < gl->bitmap.width; ++gx)
-         {
-            transformer[(gy * gl->bitmap.width + gx) * 4 + 0] = gl->bitmap.buffer[gy * gl->bitmap.width + gx];
-            transformer[(gy * gl->bitmap.width + gx) * 4 + 1] = gl->bitmap.buffer[gy * gl->bitmap.width + gx];
-            transformer[(gy * gl->bitmap.width + gx) * 4 + 2] = gl->bitmap.buffer[gy * gl->bitmap.width + gx];
-            transformer[(gy * gl->bitmap.width + gx) * 4 + 3] = gl->bitmap.buffer[gy * gl->bitmap.width + gx];
-         }
-      }
-      
-      /* Upload the "bitmap", which contains an 8-bit grayscale image, as an alpha texture */
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, gl->bitmap.width, gl->bitmap.rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, transformer);
-      
       /* Calculate the vertex and texture coordinates */
-      float x2 = x + gl->bitmap_left/16.0;
-      float y2 = y - gl->bitmap_top/16.0;
-      float w = gl->bitmap.width/16.0;
-      float h = gl->bitmap.rows/16.0;
       float vert[] =
       {
-         x2, y2,
-         x2 + w, y2,
-         x2, y2 + h,
-         x2 + w, y2 + h,
+         x,        y - 24.0,
+         x + 16.0, y - 24.0,
+         x,        y,
+         x + 16.0, y,
       };
       float texc[] =
       {
-         0, 0,
-         1, 0,
-         0, 1,
-         1, 1,
+         (*p - 32) / 96.0, 0.0,
+         (*p - 31) / 96.0, 0.0,
+         (*p - 32) / 96.0, 1.0,
+         (*p - 31) / 96.0, 1.0,
       };
       
       /* Draw the character on the screen */
@@ -134,11 +85,10 @@ static void drawString(char* str, float x, float y, int size, float r, float g, 
       glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
       
       /* Advance the cursor to the start of the next character */
-      x += (gl->advance.x/16.0 /64);
-      y += (gl->advance.y/16.0 /64);
+      x += 14.0;
    }
-   glDeleteTextures(1, &tex);
    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+   glDisable(GL_TEXTURE_2D);
 }
 
 static void drawFps(void)
@@ -171,7 +121,7 @@ static void drawFps(void)
 
    sprintf(buffer, "%.1lf fps", dfps);
 
-   drawString(buffer, 3.0, 30.0, 18, 1.0, 1.0, 1.0);
+   drawString(buffer, 3.0, 48.0, 1.0, 1.0, 1.0);
 }
 
 static void drawPlayers(void)
@@ -189,14 +139,14 @@ static void drawPlayers(void)
       if(conf.oneline)
       {
          x = p * (float)screenW / conf.maxPlayers + 3.0;
-         y = 15.0;
+         y = 24.0;
       }
       else
       {
          x = (p / 2) * ((float)screenW / ((conf.maxPlayers + 1) / 2)) + 3.0;
-         y = (p % 2) ? screenH - 6.0 : 15.0;
+         y = (p % 2) ? screenH - 3.0 : 24.0;
       }
-      drawString(buffer, x, y, 18, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
+      drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
    }
 }
 
@@ -243,19 +193,18 @@ static void draw(void)
          bright *= bright;
          for(i = 0; i < shot->length; ++i)
          {
-            renderBuffer[i*3] = shot->dot[i].x;
-            renderBuffer[i*3+1] = shot->dot[i].y;
-            renderBuffer[i*3+2] = 0;
+            renderBuffer[i*2] = shot->dot[i].x;
+            renderBuffer[i*2+1] = shot->dot[i].y;
          }
          glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, bright);
-         glVertexPointer(3, GL_FLOAT, 0, renderBuffer);
+         glVertexPointer(2, GL_FLOAT, 0, renderBuffer);
          glDrawArrays(GL_LINE_STRIP, 0, shot->length);
       }
       glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, 1.0f);
       glPushMatrix();
       glTranslatef(pl->position.x, pl->position.y, 0);
       glScalef(4.0, 4.0, 1.0);
-      glVertexPointer(3, GL_FLOAT, 0, vertCircle);
+      glVertexPointer(2, GL_FLOAT, 0, vertCircle);
       glDrawArrays(GL_LINE_LOOP, 0, 16);
       glDrawArrays(GL_LINES, 16, 16);
       glPopMatrix();
@@ -268,7 +217,7 @@ static void draw(void)
       glPushMatrix();
       glTranslatef(p->position.x, p->position.y, 0);
       glScalef(p->radius, p->radius, 1.0);
-      glVertexPointer(3, GL_FLOAT, 0, vertCircle);
+      glVertexPointer(2, GL_FLOAT, 0, vertCircle);
       glDrawArrays(GL_LINE_LOOP, 0, 16);
       glDrawArrays(GL_LINES, 16, 16);
       glPopMatrix();
@@ -312,27 +261,17 @@ static void reshape(int w, int h)
 void initDisplay(int* argc, char** argv)
 {
    int p, i;
+   GLuint font[96*24*16*4];
+   FILE* fp;
 
    initSystem(argc, argv);
+
    glEnable(GL_BLEND);
-   glEnable(GL_TEXTURE_2D);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glClearColor(0.0, 0.0, 0.0, 1.0);
 
-   FT_Library ft;
-
-   if(FT_Init_FreeType(&ft))
-   {
-      fprintf(stderr, "Could not init freetype library\n");
-   }
-
-   if(FT_New_Face(ft, "UbuntuMono-B.ttf", 0, &face))
-   {
-      fprintf(stderr, "Could not open font\n");
-   }
-   
    uiPlayer = malloc(conf.maxPlayers * sizeof(UiPlayer));
-   renderBuffer = malloc(conf.maxSegments * 3 * sizeof(float));
+   renderBuffer = malloc(conf.maxSegments * 2 * sizeof(float));
 
    for(p = 0; p < conf.maxPlayers; ++p)
    {
@@ -351,17 +290,33 @@ void initDisplay(int* argc, char** argv)
       float y = cos(a);
       vertCircle[i][0] = x;
       vertCircle[i][1] = y;
-      vertCircle[i][2] = 0.0;
       vertCircle[8 + i][0] = -x;
       vertCircle[8 + i][1] = -y;
-      vertCircle[8 + i][2] = 0.0;
       vertCircle[16 + 2 * i][0] = x;
       vertCircle[16 + 2 * i][1] = y;
-      vertCircle[16 + 2 * i][2] = 0.0;
       vertCircle[16 + 2 * i + 1][0] = -x;
       vertCircle[16 + 2 * i + 1][1] = -y;
-      vertCircle[16 + 2 * i + 1][2] = 0.0;
    }
+   
+   fp = fopen("font24.raw", "rb");
+   assert(fread(font, 1, 96*24*16*4, fp) == 96*24*16*4);
+   fclose(fp);
+   
+   /* Create a texture that will hold the font */
+   glActiveTexture(GL_TEXTURE0);
+   glGenTextures(1, &tex);
+   glBindTexture(GL_TEXTURE_2D, tex);
+
+   /* Clamping to edges is important to prevent artifacts when scaling */
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+   /* Linear filtering usually looks best for text */
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+   
+   /* Upload the font */
+   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 96*16, 24, 0, GL_RGBA, GL_UNSIGNED_BYTE, font);
 }
 
 void updateZoom(double z)
@@ -395,13 +350,6 @@ static void initSystem(int* argc, char ** argv)
    glutReshapeFunc(reshape);
 
    glEnable(GL_MULTISAMPLE);
-}
-
-static void drawString15(char* str, float x, float y, float r, float g, float b)
-{
-   glColor3d(r, g, b);
-   glRasterPos2d(x, y);
-   glutBitmapString(GLUT_BITMAP_9_BY_15, (unsigned char*)str);
 }
 
 static void swapBuffers()
@@ -495,10 +443,6 @@ void initSystem(int* argc, char** argv)
    assert(EGL_FALSE != result);
 
    reshape(screenW, screenH);
-}
-
-static void drawString15(char* str, float x, float y, float r, float g, float b)
-{
 }
 
 void swapBuffers(void)
