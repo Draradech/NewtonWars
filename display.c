@@ -22,10 +22,10 @@
 
 #if defined TARGET_GLUT
    #ifndef GL_MULTISAMPLE
-      #define GL_MULTISAMPLE  0x809D
+   #define GL_MULTISAMPLE  0x809D
    #endif
    #ifndef GL_CLAMP_TO_EDGE
-      #define GL_CLAMP_TO_EDGE  0x812F
+   #define GL_CLAMP_TO_EDGE  0x812F
    #endif
 #elif defined TARGET_RASPI
    #define glOrtho glOrthof
