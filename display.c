@@ -6,32 +6,34 @@
 #include <assert.h>
 
 #if defined TARGET_GLUT
-#include <GL/freeglut.h>
-#ifndef GL_MULTISAMPLE
-#define GL_MULTISAMPLE  0x809D
-#endif
-#ifndef GL_CLAMP_TO_EDGE
-#define GL_CLAMP_TO_EDGE  0x812F
-#endif
+   #include <GL/freeglut.h>
 #elif defined TARGET_RASPI
-#include <bcm_host.h>
-#include <GLES/gl.h>
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <sys/time.h>
-#include <time.h>
+   #include <bcm_host.h>
+   #include <GLES/gl.h>
+   #include <EGL/egl.h>
+   #include <EGL/eglext.h>
+   #include <sys/time.h>
+   #include <time.h>
 #endif
 
 #include "config.h"
 #include "color.h"
 #include "simulation.h"
 
-#if defined TARGET_RASPI
-#define glOrtho glOrthof
+#if defined TARGET_GLUT
+   #ifndef GL_MULTISAMPLE
+      #define GL_MULTISAMPLE  0x809D
+   #endif
+   #ifndef GL_CLAMP_TO_EDGE
+      #define GL_CLAMP_TO_EDGE  0x812F
+   #endif
+#elif defined TARGET_RASPI
+   #define glOrtho glOrthof
 #endif
 
 static void initSystem(int* argc, char** argv);
 static void swapBuffers(void);
+static unsigned long getTime();
 
 typedef struct
 {
@@ -45,12 +47,6 @@ static float vertCircle[32][2];
 static float left, right, bottom, top, zoom;
 static int screenW, screenH;
 static int fps;
-
-#if defined TARGET_RASPI
-static EGLDisplay display;
-static EGLSurface surface;
-static EGLContext context;
-#endif
 
 static void drawString(char* str, float x, float y, float r, float g, float b)
 {
@@ -100,18 +96,10 @@ static void drawFps(void)
    static float dfps;
 
    unsigned long time;
-   #if defined TARGET_RASPI
-   struct timeval tv;
-   #endif
    char buffer[16];
 
    frameCounter++;
-   #if defined TARGET_RASPI
-   gettimeofday(&tv, 0);
-   time = 1000 * tv.tv_sec + tv.tv_usec / 1000;
-   #elif defined TARGET_GLUT
-   time = glutGet(GLUT_ELAPSED_TIME);
-   #endif
+   time = getTime();
 
    if(time > timeOld + 500)
    {
@@ -356,6 +344,11 @@ static void swapBuffers()
    glutSwapBuffers();
 }
 
+static unsigned long getTime(void)
+{
+   return glutGet(GLUT_ELAPSED_TIME);
+}
+
 void stepDisplay(void)
 {
    glutPostRedisplay();
@@ -363,6 +356,10 @@ void stepDisplay(void)
 }
 
 #elif defined TARGET_RASPI
+
+static EGLDisplay display;
+static EGLSurface surface;
+static EGLContext context;
 
 void initSystem(int* argc, char** argv)
 {
@@ -446,6 +443,13 @@ void initSystem(int* argc, char** argv)
 void swapBuffers(void)
 {
    eglSwapBuffers(display, surface);
+}
+
+static unsigned long getTime(void)
+{
+   struct timeval tv;
+   gettimeofday(&tv, 0);
+   return 1000 * tv.tv_sec + tv.tv_usec / 1000;
 }
 
 void stepDisplay(void)
