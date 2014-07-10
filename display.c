@@ -10,6 +10,9 @@
 #ifndef GL_MULTISAMPLE
 #define GL_MULTISAMPLE  0x809D
 #endif
+#ifndef GL_CLAMP_TO_EDGE
+#define GL_CLAMP_TO_EDGE  0x812F
+#endif
 #elif defined TARGET_RASPI
 #include <bcm_host.h>
 #include <GLES/gl.h>
@@ -153,6 +156,7 @@ static void drawPlayers(void)
 static void draw(void)
 {
    int i, p, s;
+   float assumedW;
 
    glViewport(0, 0, screenW, screenH);
 
@@ -225,7 +229,9 @@ static void draw(void)
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
-   glOrtho(0, screenW, screenH, 0, -100, 100); /* left, right, bottom, top, near, far */
+
+   assumedW = screenW > 1600 ? screenW : screenW < 800 ? screenW * 2 : 1600;
+   glOrtho(0, assumedW, assumedW * screenH / screenW, 0, -100, 100); /* left, right, bottom, top, near, far */
 
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
@@ -303,7 +309,6 @@ void initDisplay(int* argc, char** argv)
    fclose(fp);
    
    /* Create a texture that will hold the font */
-   glActiveTexture(GL_TEXTURE0);
    glGenTextures(1, &tex);
    glBindTexture(GL_TEXTURE_2D, tex);
 
