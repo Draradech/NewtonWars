@@ -340,7 +340,6 @@ static void initSystem(int* argc, char ** argv)
 
 static void swapBuffers()
 {
-   glFlush();
    glutSwapBuffers();
 }
 
