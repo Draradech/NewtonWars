@@ -3,10 +3,11 @@ Changelog
 2014-07-10
 ----------
  * add font rendering to unified renderer
+ * performance: directly render stored shots (w/o prior conversion)
 
 2014-07-09
 ----------
- * added raspberry pi support
+ * add raspberry pi support
  * unified renderer working for glut and raspberry pi targets
 
 2014-07-08
@@ -20,7 +21,6 @@ Changelog
 
 2014-07-06
 ----------
-
  * decouple network code from rendering
  * move almost all data into simulation, renderer is a simple view now
  * simulation is now prepared for introduction of additional gamemodes (realtime, realtime with multiple shots, etc.)
@@ -28,5 +28,4 @@ Changelog
 
 2014-07-05
 ----------
-
  * playable version - initial commit
