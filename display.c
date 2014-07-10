@@ -46,6 +46,7 @@ static GLuint tex;
 static float vertCircle[32][2];
 static float left, right, bottom, top, zoom;
 static int screenW, screenH;
+static float uiW, uiH;
 static int fps;
 
 static void drawString(char* str, float x, float y, float r, float g, float b)
@@ -128,13 +129,13 @@ static void drawPlayers(void)
       sprintf(buffer, "%s%s (%d:%d)%s", p == getCurrentPlayer() ? "> " : "  ", pl->name, pl->kills, pl->deaths, p == getCurrentPlayer() ? " <" : "");
       if(conf.oneline)
       {
-         x = p * (float)screenW / conf.maxPlayers + 3.0;
+         x = p * uiW / conf.maxPlayers + 3.0;
          y = 24.0;
       }
       else
       {
-         x = (p / 2) * ((float)screenW / ((conf.maxPlayers + 1) / 2)) + 3.0;
-         y = (p % 2) ? screenH - 3.0 : 24.0;
+         x = (p / 2) * (uiW / ((conf.maxPlayers + 1) / 2)) + 3.0;
+         y = (p % 2) ? uiH - 3.0 : 24.0;
       }
       drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
    }
@@ -143,7 +144,6 @@ static void drawPlayers(void)
 static void draw(void)
 {
    int i, p, s;
-   float assumedW;
 
    glViewport(0, 0, screenW, screenH);
 
@@ -210,8 +210,7 @@ static void draw(void)
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
 
-   assumedW = screenW > 1600 ? screenW : screenW < 800 ? screenW * 2 : 1600;
-   glOrtho(0, assumedW, assumedW * screenH / screenW, 0, -100, 100); /* left, right, bottom, top, near, far */
+   glOrtho(0, uiW, uiH, 0, -100, 100); /* left, right, bottom, top, near, far */
 
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
@@ -242,6 +241,8 @@ static void reshape(int w, int h)
       left = 0.0;
       right = conf.battlefieldW;
    }
+   uiW = screenW > 1600 ? screenW : screenW < 800 ? screenW * 2 : 1600;
+   uiH = uiW * screenH / screenW;
 }
 
 void initDisplay(int* argc, char** argv)
@@ -254,7 +255,7 @@ void initDisplay(int* argc, char** argv)
 
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-   glLineWidth(1.5);
+   glLineWidth(2.0);
    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
    glEnable(GL_LINE_SMOOTH);
    glClearColor(0.0, 0.0, 0.0, 1.0);
