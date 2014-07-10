@@ -33,7 +33,7 @@
 
 static void initSystem(int* argc, char** argv);
 static void swapBuffers(void);
-static unsigned long getTime();
+static unsigned long getTime(void);
 
 typedef struct
 {
