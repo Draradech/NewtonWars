@@ -254,6 +254,9 @@ void initDisplay(int* argc, char** argv)
 
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glLineWidth(1.5);
+   glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+   glEnable(GL_LINE_SMOOTH);
    glClearColor(0.0, 0.0, 0.0, 1.0);
    glEnableClientState(GL_VERTEX_ARRAY);
 
@@ -318,7 +321,7 @@ void toggleFps(void)
 static void initSystem(int* argc, char ** argv)
 {
    glutInit(argc, argv);
-   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_MULTISAMPLE);
+   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
    glutCreateWindow("NewtonWars");
 
    if(conf.fullscreen)
@@ -333,8 +336,6 @@ static void initSystem(int* argc, char ** argv)
 
    glutDisplayFunc(draw);
    glutReshapeFunc(reshape);
-
-   glEnable(GL_MULTISAMPLE);
 }
 
 static void swapBuffers()
