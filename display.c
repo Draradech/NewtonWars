@@ -160,8 +160,6 @@ static void draw(void)
    glScalef(zoom, zoom, zoom);
    glTranslatef((left - right) / 2, (top - bottom) / 2, 0);
 
-   glEnableClientState(GL_VERTEX_ARRAY);
-
    for(p = 0; p < conf.maxPlayers; ++p)
    {
       SimPlayer* pl = getPlayer(p);
@@ -257,6 +255,7 @@ void initDisplay(int* argc, char** argv)
    glEnable(GL_BLEND);
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glClearColor(0.0, 0.0, 0.0, 1.0);
+   glEnableClientState(GL_VERTEX_ARRAY);
 
    uiPlayer = malloc(conf.maxPlayers * sizeof(UiPlayer));
 
