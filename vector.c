@@ -42,3 +42,19 @@ double distance(Vec2d v1, Vec2d v2)
 {
    return length(vsub(v1, v2));
 }
+
+Vec2f d2f(Vec2d v)
+{
+   Vec2f res;
+   res.x = v.x;
+   res.y = v.y;
+   return res;
+}
+
+Vec2d f2d(Vec2f v)
+{
+   Vec2d res;
+   res.x = v.x;
+   res.y = v.y;
+   return res;
+}

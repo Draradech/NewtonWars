@@ -40,7 +40,6 @@ typedef struct
 } UiPlayer;
 
 static UiPlayer* uiPlayer;
-static float* renderBuffer;
 static GLuint tex;
 static float vertCircle[32][2];
 static float left, right, bottom, top, zoom;
@@ -195,13 +194,8 @@ static void draw(void)
             bright += uiPlayer[p].fadeout / conf.numShots;
          }
          bright *= bright;
-         for(i = 0; i < shot->length; ++i)
-         {
-            renderBuffer[i*2] = shot->dot[i].x;
-            renderBuffer[i*2+1] = shot->dot[i].y;
-         }
          glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, bright);
-         glVertexPointer(2, GL_FLOAT, 0, renderBuffer);
+         glVertexPointer(2, GL_FLOAT, 0, shot->dot);
          glDrawArrays(GL_LINE_STRIP, 0, shot->length);
       }
       glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, 1.0f);
@@ -277,7 +271,6 @@ void initDisplay(int* argc, char** argv)
    glClearColor(0.0, 0.0, 0.0, 1.0);
 
    uiPlayer = malloc(conf.maxPlayers * sizeof(UiPlayer));
-   renderBuffer = malloc(conf.maxSegments * 2 * sizeof(float));
 
    for(p = 0; p < conf.maxPlayers; ++p)
    {

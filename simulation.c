@@ -100,7 +100,7 @@ static void nextPlayer(void)
 static void missileEnd(SimShot* s)
 {
    s->missile.live = 0;
-   s->dot[s->length++] = s->missile.position;
+   s->dot[s->length++] = d2f(s->missile.position);
 }
 
 static void planetHit(SimShot* s)
@@ -138,7 +138,7 @@ static void initShot(int pl)
    m->speed.y = p->velocity * -sin(p->angle / 180.0 * M_PI);
    m->live = 1;
    m->leftSource = 0;
-   s->dot[0] = m->position;
+   s->dot[0] = d2f(m->position);
    s->length = 1;
 }
 
@@ -217,7 +217,7 @@ static void simulate(void)
       {
          SimShot* s = &(p->shot[sh]);
          if(!s->missile.live) continue;
-         s->dot[s->length++] = s->missile.position;
+         s->dot[s->length++] = d2f(s->missile.position);
          if(s->length == conf.maxSegments)
          {
             s->missile.live = 0;
@@ -240,7 +240,7 @@ void initSimulation(void)
       for(sh = 0; sh < conf.numShots; ++sh)
       {
          SimShot* s = &(p->shot[sh]);
-         s->dot = malloc(conf.maxSegments * sizeof(Vec2d));
+         s->dot = malloc(conf.maxSegments * sizeof(Vec2f));
          s->missile.live = 0;
          s->length = 0;
       }

@@ -13,7 +13,7 @@ typedef struct
 
 typedef struct
 {
-   Vec2d* dot;
+   Vec2f* dot;
    SimMissile missile;
    int length;
 } SimShot;
