@@ -95,7 +95,7 @@ void initNetwork(void)
    WSADATA wsaData;
    if(WSAStartup(MAKEWORD(2, 0), &wsaData) != 0)
    {
-      fprintf(stderr, "WSAStartup failed.\r\n");
+      fprintf(stderr, "WSAStartup failed.\n");
       exit(1);
    }
    #endif
@@ -112,7 +112,7 @@ void initNetwork(void)
    hints.ai_flags = AI_PASSIVE;
    if ((rv = getaddrinfo(NULL, PORT, &hints, &ai)) != 0)
    {
-      fprintf(stderr, "getaddrinfo: %s\r\n", gai_strerror(rv));
+      fprintf(stderr, "getaddrinfo: %s", gai_strerror(rv));
       exit(2);
    }
 
@@ -133,6 +133,7 @@ void initNetwork(void)
       if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, (void *)&yes, sizeof(yes)) == -1)
       {
          print_error("setsockopt reuse");
+         close(listener);
          continue;
       }
 
@@ -140,13 +141,14 @@ void initNetwork(void)
       if (setsockopt(listener, IPPROTO_IPV6, IPV6_V6ONLY, (void *)&no, sizeof(no)) == -1)
       {
          print_error("setsockopt dualstack");
+         close(listener);
          continue;
       }
 
       if (bind(listener, p->ai_addr, p->ai_addrlen) == -1)
       {
-         close(listener);
          print_error("bind");
+         close(listener);
          continue;
       }
 
@@ -172,13 +174,14 @@ void initNetwork(void)
          if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, (void *)&yes, sizeof(yes)) == -1)
          {
             print_error("setsockopt reuse");
+            close(listener);
             continue;
          }
 
          if (bind(listener, p->ai_addr, p->ai_addrlen) == -1)
          {
-            close(listener);
             print_error("bind");
+            close(listener);
             continue;
          }
 
@@ -187,7 +190,7 @@ void initNetwork(void)
 
       if (p == NULL) // IPv4 failed as well
       {
-         fprintf(stderr, "failed to bind\r\n");
+         fprintf(stderr, "failed to bind\n");
          exit(3);
       }
    }
@@ -202,7 +205,7 @@ void initNetwork(void)
 
    FD_SET(listener, &master);
    fdmax = listener;
-   printf("waiting for connections...\r\n");
+   printf("waiting for connections...\n");
 }
 
 void stepNetwork(void)
@@ -263,7 +266,7 @@ void stepNetwork(void)
                if(k == conf.maxPlayers)
                {
                   close(newfd);
-                  printf("new connection from %s on socket %d refused: max connections\r\n", remoteIP, newfd);
+                  printf("new connection from %s on socket %d refused: max connections\n", remoteIP, newfd);
                }
                else
                {
@@ -272,7 +275,7 @@ void stepNetwork(void)
                   {
                      fdmax = newfd;
                   }
-                  printf("new connection from %s on socket %d accepted\r\n", remoteIP, newfd);
+                  printf("new connection from %s on socket %d accepted\n", remoteIP, newfd);
                   snd(newfd, WELCOME);
                }
             }
@@ -283,7 +286,7 @@ void stepNetwork(void)
             {
                if(nbytes == 0)
                {
-                  printf("socket %d hung up\r\n", i);
+                  printf("socket %d hung up\n", i);
                }
                else
                {
@@ -316,7 +319,6 @@ void stepNetwork(void)
                for(k = 0; k < nbytes && pi >= 0; ++k)
                {
                   unsigned char c = buf[k];
-                  //printf("%x ", c);
                   if(c != '\r' && c != '\n')
                   {
                      if(isprint(c) && connection[pi].msgbufindex < 128 - 2)
@@ -338,7 +340,7 @@ void stepNetwork(void)
                         snd(i, connection[pi].msgbuf);
                         snd(i, "\r\n");
                      }
-                     printf("%16s (%d): \"%s\"\r\n", getPlayer(pi)->name, pi, connection[pi].msgbuf);
+                     printf("%16s (%d): \"%s\"\n", getPlayer(pi)->name, pi, connection[pi].msgbuf);
                      switch(connection[pi].msgbuf[0])
                      {
                         case 'n':

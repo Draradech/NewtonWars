@@ -101,6 +101,10 @@ static void initPlayer(int p, int clear)
       }
       tries++;
    } while (nok);
+   if(tries >= 2000)
+   {
+      printf("Couldn't keep player spawn away from existing shots.\n");
+   }
 }
 
 static void nextPlayer(void)
@@ -136,7 +140,7 @@ static void playerHit(SimShot* s, int p, int p2)
       player[pl].valid = 0;
       player[pl].velocity = 10.0;
    }
-   sprintf(deathMessage, "%s killed %s.", player[p].name, player[p2].name);
+   sprintf(deathMessage, "%s killed %s", player[p].name, player[p2].name);
    nextPlayer(); /* not nice here, think about this more */
 }
 

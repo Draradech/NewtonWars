@@ -102,13 +102,11 @@ static void drawFps(void)
    if(time > timeOld + 500)
    {
       dfps = frameCounter * 1000.0 / (time - timeOld);
-
       frameCounter = 0;
       timeOld = time;
    }
 
    sprintf(buffer, "%.1lf fps", dfps);
-
    drawString(buffer, 3.0, 48.0, 1.0, 1.0, 1.0);
 }
 
@@ -359,6 +357,7 @@ static EGLContext context;
 
 void initSystem(int* argc, char** argv)
 {
+   uint32_t w, h;
    int success = 0;
    EGLBoolean result;
    EGLint num_config;
@@ -402,18 +401,18 @@ void initSystem(int* argc, char** argv)
    assert(context!=EGL_NO_CONTEXT);
 
    // create an EGL window surface
-   success = graphics_get_display_size(0, (uint32_t*)&screenW, (uint32_t*)&screenH);
+   success = graphics_get_display_size(0, &w, &h);
    assert(success >= 0);
 
    dst_rect.x = 0;
    dst_rect.y = 0;
-   dst_rect.width = screenW;
-   dst_rect.height = screenH;
+   dst_rect.width = w;
+   dst_rect.height = h;
 
    src_rect.x = 0;
    src_rect.y = 0;
-   src_rect.width = screenW << 16;
-   src_rect.height = screenH << 16;
+   src_rect.width = w << 16;
+   src_rect.height = h << 16;
 
    dispman_display = vc_dispmanx_display_open(0);
    dispman_update = vc_dispmanx_update_start(0);
@@ -422,8 +421,8 @@ void initSystem(int* argc, char** argv)
       &src_rect, DISPMANX_PROTECTION_NONE, 0 /*alpha*/, 0/*clamp*/, 0/*transform*/);
 
    nativewindow.element = dispman_element;
-   nativewindow.width = screenW;
-   nativewindow.height = screenH;
+   nativewindow.width = w;
+   nativewindow.height = h;
    vc_dispmanx_update_submit_sync(dispman_update);
 
    surface = eglCreateWindowSurface(display, config, &nativewindow, NULL);
@@ -433,7 +432,7 @@ void initSystem(int* argc, char** argv)
    result = eglMakeCurrent(display, surface, surface, context);
    assert(EGL_FALSE != result);
 
-   reshape(screenW, screenH);
+   reshape(w, h);
 }
 
 void swapBuffers(void)
