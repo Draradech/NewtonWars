@@ -21,9 +21,6 @@
 #include "simulation.h"
 
 #if defined TARGET_GLUT
-   #ifndef GL_MULTISAMPLE
-   #define GL_MULTISAMPLE  0x809D
-   #endif
    #ifndef GL_CLAMP_TO_EDGE
    #define GL_CLAMP_TO_EDGE  0x812F
    #endif
@@ -77,12 +74,12 @@ static void drawString(char* str, float x, float y, float r, float g, float b)
          (*p - 32) / 96.0, 1.0,
          (*p - 31) / 96.0, 1.0,
       };
-      
+
       /* Draw the character on the screen */
       glVertexPointer(2, GL_FLOAT, 0, vert);
       glTexCoordPointer(2, GL_FLOAT, 0, texc);
       glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-      
+
       /* Advance the cursor to the start of the next character */
       x += 14.0;
    }
@@ -174,12 +171,11 @@ static void draw(void)
          {
             uiPlayer[p].fadeout = 1.0;
          }
-         bright = (double)(conf.numShots - s) / conf.numShots;
+         bright = (double)(conf.numShots - s - 1) / (conf.numShots - 1);
          if(s > 0)
          {
-            bright += uiPlayer[p].fadeout / conf.numShots;
+            bright += uiPlayer[p].fadeout / (conf.numShots - 1);
          }
-         bright *= bright;
          glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, bright);
          glVertexPointer(2, GL_FLOAT, 0, shot->dot);
          glDrawArrays(GL_LINE_STRIP, 0, shot->length);

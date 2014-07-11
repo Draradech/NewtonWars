@@ -118,8 +118,10 @@ static void playerHit(SimShot* s, int p, int p2)
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
       player[pl].valid = 0;
+      player[pl].velocity = 10.0;
    }
    sprintf(deathMessage, "%s killed %s.", player[p].name, player[p2].name);
+   nextPlayer(); /* not nice here, think about this more */
 }
 
 static void wallHit(SimShot* s)
@@ -254,7 +256,7 @@ void stepSimulation(void)
    {
       nextPlayer();
    }
-   if(player[currentPlayer].valid && !player[currentPlayer].didShoot)
+   if(player[currentPlayer].active && player[currentPlayer].valid && !player[currentPlayer].didShoot)
    {
       player[currentPlayer].currentShot = (player[currentPlayer].currentShot + 1) % conf.numShots;
       initShot(currentPlayer);
@@ -267,12 +269,36 @@ void stepSimulation(void)
 
 void playerJoin(int p)
 {
+   int pi;
    initPlayer(p, 1);
+   if(p == 0)
+   {
+      for(pi = 1; pi < conf.maxPlayers; pi++)
+      {
+         if(player[pi].active)
+         {
+            break;
+         }
+      }
+      if(pi == conf.maxPlayers)
+      {
+         currentPlayer = 0;
+      }
+   }
 }
 
 void playerLeave(int p)
 {
    player[p].active = 0;
+   if(p == currentPlayer)
+   {
+      nextPlayer();
+   }
+   for(p = 0; p < conf.maxPlayers; ++p)
+   {
+      player[p].valid = 0;
+      player[p].velocity = 10.0;
+   }
 }
 
 void updateAngle(int p, double a)
@@ -283,7 +309,7 @@ void updateAngle(int p, double a)
 
 void updateVelocity(int p, double v)
 {
-   player[p].velocity = v;
+   player[p].velocity = LIMIT(v, 0.0, 15.0);
 }
 
 void updateName(int p, char* n)
