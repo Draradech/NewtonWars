@@ -40,7 +40,7 @@ static void initPlanets(void)
 
 static void initPlayer(int p, int clear)
 {
-   int i, sh, nok;
+   int i, j, k, nok, tries;
 
    if(clear)
    {
@@ -56,13 +56,14 @@ static void initPlayer(int p, int clear)
    player[p].valid = 0;
    player[p].didShoot = 0;
 
-   for(sh = 0; sh < conf.numShots; ++sh)
+   for(i = 0; i < conf.numShots; ++i)
    {
-      SimShot* s = &(player[p].shot[sh]);
+      SimShot* s = &(player[p].shot[i]);
       s->length = 0;
       s->missile.live = 0;
    }
 
+   tries = 0;
    do
    {
       player[p].position.x = 20.0 + (double)rand() / RAND_MAX * (conf.battlefieldW - 40.0);
@@ -71,19 +72,34 @@ static void initPlayer(int p, int clear)
       nok = 0;
       for(i = 0; i < conf.numPlanets; ++i)
       {
-         if(distance(player[p].position, planet[i].position) <= (100.0 + planet[i].radius))
+         if(distance(player[p].position, planet[i].position) <= (100.0 + planet[i].radius + 4.0))
          {
             nok = 1;
          }
       }
       for(i = 0; i < conf.maxPlayers; ++i)
       {
-         if(i == p || !player[p].active) continue;
-         if(distance(player[p].position, player[i].position) <= (200.0 + 4.0))
+         if(i == p || !player[i].active) continue;
+         if(distance(player[p].position, player[i].position) <= (200.0 + 4.0 + 4.0))
          {
             nok = 1;
          }
       }
+      for(i = 0; i < conf.maxPlayers && tries < 2000 && !nok; ++i)
+      {
+         if(i == p || !player[i].active) continue;
+         for(j = 0; j < conf.numShots && !nok; ++j)
+         {
+            for(k = 0; k < player[i].shot[j].length && !nok; ++k)
+            {
+               if(distance(player[p].position, f2d(player[i].shot[j].dot[k])) <= 100.0)
+               {
+                  nok = 1;
+               }
+            }
+         }
+      }
+      tries++;
    } while (nok);
 }
 
@@ -252,6 +268,7 @@ void initSimulation(void)
 
 void stepSimulation(void)
 {
+   int i;
    if(player[currentPlayer].active && player[currentPlayer].shot[player[currentPlayer].currentShot].missile.live == 0 && player[currentPlayer].didShoot)
    {
       nextPlayer();
