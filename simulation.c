@@ -12,6 +12,7 @@ static SimPlanet* planet;
 static SimPlayer* player;
 static int currentPlayer;
 static char deathMessage[128];
+static double killflash;
 
 static void initPlanets(void)
 {
@@ -140,8 +141,9 @@ static void playerHit(SimShot* s, int p, int p2)
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
       player[pl].valid = 0;
-      player[pl].timeout = conf.timeout;
+      player[pl].timeout = conf.timeout * 2;
       player[pl].velocity = 10.0;
+      killflash = 1.0;
    }
    sprintf(deathMessage, "%s killed %s", player[p].name, player[p2].name);
    nextPlayer(); /* not nice here, think about this more */
@@ -275,6 +277,7 @@ void initSimulation(void)
       }
       p->active = 0;
    }
+   killflash = 0.0;
 }
 
 void stepSimulation(void)
@@ -299,6 +302,7 @@ void stepSimulation(void)
       player[currentPlayer].didShoot = 1;
    }
    simulate();
+   killflash *= 0.95;
 }
 
 void playerJoin(int p)
@@ -331,8 +335,9 @@ void playerLeave(int p)
    for(p = 0; p < conf.maxPlayers; ++p)
    {
       player[p].valid = 0;
-      player[p].timeout = conf.timeout;
+      player[p].timeout = conf.timeout * 2;
       player[p].velocity = 10.0;
+      killflash = 1.0;
    }
 }
 
@@ -408,4 +413,9 @@ int getDeathMessage(char* buf)
       return 1;
    }
    return 0;
+}
+
+double getFlash(void)
+{
+   return killflash;
 }

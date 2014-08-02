@@ -54,6 +54,7 @@ void reinitialize(void);
 SimShot* getShot(int p, int s);
 SimPlanet* getPlanet(int i);
 SimPlayer* getPlayer(int p);
+double getFlash(void);
 int getCurrentPlayer(void);
 int getDeathMessage(char* buf);
 

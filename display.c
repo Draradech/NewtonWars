@@ -161,6 +161,7 @@ static void draw(void)
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
 
+   glClearColor(getFlash(), getFlash(), getFlash(), 1.0);
    glClear(GL_COLOR_BUFFER_BIT);
 
    glTranslatef((right - left) / 2, (bottom - top) / 2, 0);
@@ -264,7 +265,6 @@ void initDisplay(int* argc, char** argv)
    glLineWidth(2.0);
    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
    glEnable(GL_LINE_SMOOTH);
-   glClearColor(0.0, 0.0, 0.0, 1.0);
    glEnableClientState(GL_VERTEX_ARRAY);
 
    uiPlayer = malloc(conf.maxPlayers * sizeof(UiPlayer));
