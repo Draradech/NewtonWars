@@ -140,7 +140,7 @@ static void playerHit(SimShot* s, int p, int p2)
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
       player[pl].valid = 0;
-      player[p].timeout = conf.timeout;
+      player[pl].timeout = conf.timeout;
       player[pl].velocity = 10.0;
    }
    sprintf(deathMessage, "%s killed %s", player[p].name, player[p2].name);
@@ -239,6 +239,7 @@ static void simulate(void)
       SimPlayer* p = &(player[pl]);
       if(!p->active) continue;
       if(p->timeout) p->timeout--;
+      if(p->valid) p->timeout = conf.timeout;
       for(sh = 0; sh < conf.numShots; ++sh)
       {
          SimShot* s = &(p->shot[sh]);

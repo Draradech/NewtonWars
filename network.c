@@ -407,11 +407,11 @@ void stepNetwork(void)
    {
       if(getPlayer(k)->active && getPlayer(k)->timeoutcnt > 2)
       {
-         connection[k].socket = 0;
          connection[k].echo = 0;
          playerLeave(k);
          close(connection[k].socket);
          FD_CLR(connection[k].socket, &master);
+         connection[k].socket = 0;
       }
    }   
 }
