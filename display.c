@@ -173,7 +173,7 @@ static void draw(void)
       SimPlayer* pl = getPlayer(p);
       if(!pl->active) continue;
       uiPlayer[p].fadeout = LIMIT(uiPlayer[p].fadeout - 0.02, 0.0, 1.0);
-      for(s = 0; s < conf.numShots; ++s)
+      for(s = conf.numShots - 1; s >= 0; --s)
       {
          double bright;
          SimShot* shot;
