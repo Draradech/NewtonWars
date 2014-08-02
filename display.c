@@ -190,6 +190,12 @@ static void draw(void)
          glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, bright);
          glVertexPointer(2, GL_FLOAT, 0, shot->dot);
          glDrawArrays(GL_LINE_STRIP, 0, shot->length);
+         if(shot->missile.live && shot->length > 2)
+         {
+            glColor4f(1.0, 1.0, 1.0, bright);
+            glVertexPointer(2, GL_FLOAT, 0, shot->dot + shot->length - 3);
+            glDrawArrays(GL_LINE_STRIP, 0, 3);
+         }
       }
       glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, 1.0f);
       glPushMatrix();
