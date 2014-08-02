@@ -13,6 +13,7 @@ typedef struct
    int fastmode;
    int fullscreen;
    int oneline;
+   int timeout;
    double battlefieldW;
    double battlefieldH;
 } Config;

@@ -31,6 +31,8 @@ typedef struct
    int active;
    int valid;
    int didShoot;
+   int timeout;
+   int timeoutcnt;
    char name[16];
 } SimPlayer;
 

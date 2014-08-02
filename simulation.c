@@ -55,6 +55,8 @@ static void initPlayer(int p, int clear)
    player[p].currentShot = 0;
    player[p].valid = 0;
    player[p].didShoot = 0;
+   player[p].timeout = conf.timeout;
+   player[p].timeoutcnt = 0;
 
    for(i = 0; i < conf.numShots; ++i)
    {
@@ -138,6 +140,7 @@ static void playerHit(SimShot* s, int p, int p2)
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
       player[pl].valid = 0;
+      player[p].timeout = conf.timeout;
       player[pl].velocity = 10.0;
    }
    sprintf(deathMessage, "%s killed %s", player[p].name, player[p2].name);
@@ -235,10 +238,13 @@ static void simulate(void)
    {
       SimPlayer* p = &(player[pl]);
       if(!p->active) continue;
+      if(p->timeout) p->timeout--;
       for(sh = 0; sh < conf.numShots; ++sh)
       {
          SimShot* s = &(p->shot[sh]);
          if(!s->missile.live) continue;
+         p->timeout = conf.timeout;
+         player[currentPlayer].timeoutcnt = 0;
          s->dot[s->length++] = d2f(s->missile.position);
          if(s->length == conf.maxSegments)
          {
@@ -272,11 +278,17 @@ void initSimulation(void)
 
 void stepSimulation(void)
 {
-   int i;
-   if(player[currentPlayer].active && player[currentPlayer].shot[player[currentPlayer].currentShot].missile.live == 0 && player[currentPlayer].didShoot)
+   if(  (  player[currentPlayer].active
+        && player[currentPlayer].shot[player[currentPlayer].currentShot].missile.live == 0
+        && player[currentPlayer].didShoot
+        )
+     || player[currentPlayer].timeout == 0
+     )
    {
+      if(player[currentPlayer].timeout == 0) player[currentPlayer].timeoutcnt++;
       nextPlayer();
    }
+
    if(player[currentPlayer].active && player[currentPlayer].valid && !player[currentPlayer].didShoot)
    {
       player[currentPlayer].currentShot = (player[currentPlayer].currentShot + 1) % conf.numShots;
@@ -318,6 +330,7 @@ void playerLeave(int p)
    for(p = 0; p < conf.maxPlayers; ++p)
    {
       player[p].valid = 0;
+      player[p].timeout = conf.timeout;
       player[p].velocity = 10.0;
    }
 }

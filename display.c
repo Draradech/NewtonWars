@@ -133,6 +133,18 @@ static void drawPlayers(void)
          y = (p % 2) ? uiH - 3.0 : 24.0;
       }
       drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
+      sprintf(buffer, "  %.0lf", pl->timeout / 60.0);
+      if(conf.oneline)
+      {
+         x = p * uiW / conf.maxPlayers + 3.0;
+         y = 48.0;
+      }
+      else
+      {
+         x = (p / 2) * (uiW / ((conf.maxPlayers + 1) / 2)) + 3.0;
+         y = (p % 2) ? uiH - 3.0 - 24.0 : 48.0;
+      }
+      drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
    }
 }
 

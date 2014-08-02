@@ -11,6 +11,7 @@ void config(int* argc, char** argv)
    conf.numShots = 16;
    conf.fullscreen = 1;
    conf.oneline = 1;
+   conf.timeout = 15 * 60;
 
    conf.battlefieldW = 1660.0;
    conf.battlefieldH = 1245.0;

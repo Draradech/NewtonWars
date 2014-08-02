@@ -228,7 +228,7 @@ void stepNetwork(void)
          }
       }
    }
-
+   
    tv.tv_sec = 0;
    tv.tv_usec = 1;
    readfds = master;
@@ -403,4 +403,15 @@ void stepNetwork(void)
          }
       }
    }
+   for(k = 0; k < conf.maxPlayers; ++k)
+   {
+      if(getPlayer(k)->active && getPlayer(k)->timeoutcnt > 2)
+      {
+         connection[k].socket = 0;
+         connection[k].echo = 0;
+         playerLeave(k);
+         close(connection[k].socket);
+         FD_CLR(connection[k].socket, &master);
+      }
+   }   
 }
