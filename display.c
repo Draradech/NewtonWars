@@ -28,6 +28,8 @@
    #define glOrtho glOrthof
 #endif
 
+#define MIN(x, max) ((x) > (max) ? (max) : (x))
+
 static void initSystem(int* argc, char** argv);
 static void swapBuffers(void);
 static unsigned long getTime(void);
@@ -87,7 +89,14 @@ static void drawString(char* str, float x, float y, float r, float g, float b)
    glDisable(GL_TEXTURE_2D);
 }
 
-static void drawFps(void)
+static void drawJoin()
+{
+   char buffer[128];
+   sprintf(buffer, "To play, telnet %s 3490", conf.ip);
+   drawString(buffer, 3.0, 24.0, 1.0, 1.0, 1.0);
+}
+
+static void drawFps(int offset)
 {
    static unsigned long timeOld;
    static int frameCounter;
@@ -107,10 +116,10 @@ static void drawFps(void)
    }
 
    sprintf(buffer, "%.1lf fps", dfps);
-   drawString(buffer, 3.0, 48.0, 1.0, 1.0, 1.0);
+   drawString(buffer, 3.0, (2 + offset) * 24.0, 1.0, 1.0, 1.0);
 }
 
-static void drawPlayers(void)
+static void drawPlayers(int offset, int activeP)
 {
    static char buffer[128];
    float x, y;
@@ -121,36 +130,28 @@ static void drawPlayers(void)
       SimPlayer* pl = getPlayer(p);
       if(!pl->active) continue;
 
+      x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
+      y = (1 + offset) * 24.0;
+      if (p / 6) y = uiH - 3.0;
       sprintf(buffer, "%s%s (%d:%d)%s", p == getCurrentPlayer() ? "> " : "  ", pl->name, pl->kills, pl->deaths, p == getCurrentPlayer() ? " <" : "");
-      //if(conf.oneline)
-      {
-         x = p * uiW / conf.maxPlayers + 3.0;
-         y = 24.0;
-      }
-      //else
-      {
-         x = (p / 2) * (uiW / ((conf.maxPlayers + 1) / 2)) + 3.0;
-         y = (p % 2) ? uiH - 3.0 : 24.0;
-      }
       drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
-      sprintf(buffer, "  %.0lf", pl->timeout / 60.0);
-      //if(conf.oneline)
+
+      if(conf.timeout && activeP > 1)
       {
-         x = p * uiW / conf.maxPlayers + 3.0;
-         y = 48.0;
+         x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
+         y = (2 + offset) * 24.0;
+         if (p / 6) y = uiH - 3.0 - 24.0;
+         sprintf(buffer, "  %.0lf", pl->timeout / 60.0);
+         drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
       }
-      //else
-      {
-         x = (p / 2) * (uiW / ((conf.maxPlayers + 1) / 2)) + 3.0;
-         y = (p % 2) ? uiH - 3.0 - 24.0 : 48.0;
-      }
-      drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
    }
 }
 
 static void draw(void)
 {
-   int i, p, s;
+   int i, p, s, actp;
+   
+   for(i = 0, actp = 0; i < conf.maxPlayers; ++i) actp += getPlayer(i)->active;
 
    glViewport(0, 0, screenW, screenH);
 
@@ -167,6 +168,19 @@ static void draw(void)
    glTranslatef(conf.battlefieldW / 2, conf.battlefieldH / 2, 0);
    glScalef(zoom, zoom, zoom);
    glTranslatef(-conf.battlefieldW / 2, -conf.battlefieldH / 2, 0);
+
+   glColor4f(0.3, 0.3, 0.3, 1.0);
+   for(i = 0; i < conf.numPlanets; ++i)
+   {
+      SimPlanet* p = getPlanet(i);
+      glPushMatrix();
+      glTranslatef(p->position.x, p->position.y, 0);
+      glScalef(p->radius, p->radius, 1.0);
+      glVertexPointer(2, GL_FLOAT, 0, vertCircle);
+      glDrawArrays(GL_LINE_LOOP, 0, 16);
+      glDrawArrays(GL_LINES, 16, 16);
+      glPopMatrix();
+   }
 
    for(p = 0; p < conf.maxPlayers; ++p)
    {
@@ -204,19 +218,11 @@ static void draw(void)
       glVertexPointer(2, GL_FLOAT, 0, vertCircle);
       glDrawArrays(GL_LINE_LOOP, 0, 16);
       glDrawArrays(GL_LINES, 16, 16);
-      glPopMatrix();
-   }
-
-   glColor4f(0.3, 0.3, 0.3, 1.0);
-   for(i = 0; i < conf.numPlanets; ++i)
-   {
-      SimPlanet* p = getPlanet(i);
-      glPushMatrix();
-      glTranslatef(p->position.x, p->position.y, 0);
-      glScalef(p->radius, p->radius, 1.0);
-      glVertexPointer(2, GL_FLOAT, 0, vertCircle);
-      glDrawArrays(GL_LINE_LOOP, 0, 16);
-      glDrawArrays(GL_LINES, 16, 16);
+      if(p == getCurrentPlayer() && actp > 1)
+      {
+         glScalef(4.0, 4.0, 1.0);
+         glDrawArrays(GL_LINE_LOOP, 0, 16);
+      }
       glPopMatrix();
    }
 
@@ -228,8 +234,12 @@ static void draw(void)
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
 
-   if(fps) drawFps();
-   drawPlayers();
+   s = ((actp < conf.maxPlayers) && (conf.ip != 0));
+
+   if(s) drawJoin();
+   drawPlayers(s, actp);
+   if(conf.timeout && actp > 1) s++;
+   if(fps) drawFps(s);
 
    swapBuffers();
 }
@@ -278,7 +288,7 @@ void initDisplay(int* argc, char** argv)
    for(p = 0; p < conf.maxPlayers; ++p)
    {
       hsv color;
-      color.h = 360.0 / conf.maxPlayers * p;
+      color.h = 360.0 / MIN(conf.maxPlayers, 6) * p + (p / 6) * 30.0;
       color.s = 0.8;
       color.v = 1.0;
       uiPlayer[p].color = hsv2rgb(color);

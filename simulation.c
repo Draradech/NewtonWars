@@ -171,10 +171,10 @@ static void initShot(int pl)
 
 static void simulate(void)
 {
-   int sh, i, j, pl, pl2;
+   int sh, i, j, pl, pl2, actp;
    double l;
    Vec2d v;
-
+   
    for(i = 0; i < conf.segmentSteps; ++i)
    {
       for(pl = 0; pl < conf.maxPlayers; ++pl)
@@ -236,12 +236,13 @@ static void simulate(void)
          }
       }
    }
+   for(pl = 0, actp = 0; pl < conf.maxPlayers; ++pl) actp += player[pl].active;  
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
       SimPlayer* p = &(player[pl]);
       if(!p->active) continue;
       if(p->timeout) p->timeout--;
-      if(p->valid) p->timeout = conf.timeout;
+      if(p->valid || actp == 1) p->timeout = conf.timeout;
       for(sh = 0; sh < conf.numShots; ++sh)
       {
          SimShot* s = &(p->shot[sh]);
