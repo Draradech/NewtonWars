@@ -12,10 +12,10 @@ typedef struct
    int numShots;
    int fastmode;
    int fullscreen;
-   int oneline;
    int timeout;
    double battlefieldW;
    double battlefieldH;
+   char* ip;
 } Config;
 
 extern Config conf;

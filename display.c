@@ -122,24 +122,24 @@ static void drawPlayers(void)
       if(!pl->active) continue;
 
       sprintf(buffer, "%s%s (%d:%d)%s", p == getCurrentPlayer() ? "> " : "  ", pl->name, pl->kills, pl->deaths, p == getCurrentPlayer() ? " <" : "");
-      if(conf.oneline)
+      //if(conf.oneline)
       {
          x = p * uiW / conf.maxPlayers + 3.0;
          y = 24.0;
       }
-      else
+      //else
       {
          x = (p / 2) * (uiW / ((conf.maxPlayers + 1) / 2)) + 3.0;
          y = (p % 2) ? uiH - 3.0 : 24.0;
       }
       drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
       sprintf(buffer, "  %.0lf", pl->timeout / 60.0);
-      if(conf.oneline)
+      //if(conf.oneline)
       {
          x = p * uiW / conf.maxPlayers + 3.0;
          y = 48.0;
       }
-      else
+      //else
       {
          x = (p / 2) * (uiW / ((conf.maxPlayers + 1) / 2)) + 3.0;
          y = (p % 2) ? uiH - 3.0 - 24.0 : 48.0;
@@ -164,9 +164,9 @@ static void draw(void)
    glClearColor(getFlash(), getFlash(), getFlash(), 1.0);
    glClear(GL_COLOR_BUFFER_BIT);
 
-   glTranslatef((right - left) / 2, (bottom - top) / 2, 0);
+   glTranslatef(conf.battlefieldW / 2, conf.battlefieldH / 2, 0);
    glScalef(zoom, zoom, zoom);
-   glTranslatef((left - right) / 2, (top - bottom) / 2, 0);
+   glTranslatef(-conf.battlefieldW / 2, -conf.battlefieldH / 2, 0);
 
    for(p = 0; p < conf.maxPlayers; ++p)
    {
