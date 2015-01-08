@@ -4,9 +4,17 @@
 #include <string.h>
 #include <math.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #if defined TARGET_GLUT
-   #include <GL/freeglut.h>
+   #if defined(__MACH__)
+      #include <OpenGL/gl.h>
+      #include <OpenGL/glu.h>
+      #include <GLUT/glut.h>
+      #include <OpenGL/glext.h>
+   #elif
+      #include <GL/freeglut.h>
+   #endif
 #elif defined TARGET_RASPI
    #include <bcm_host.h>
    #include <GLES/gl.h>
@@ -374,7 +382,11 @@ static unsigned long getTime(void)
 void stepDisplay(void)
 {
    glutPostRedisplay();
+#if defined(__MACH__)
+   glutCheckLoop();
+#elif
    glutMainLoopEvent();
+#endif
 }
 
 #elif defined TARGET_RASPI
