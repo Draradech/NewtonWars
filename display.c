@@ -12,7 +12,7 @@
       #include <OpenGL/glu.h>
       #include <GLUT/glut.h>
       #include <OpenGL/glext.h>
-   #elif
+   #else
       #include <GL/freeglut.h>
    #endif
 #elif defined TARGET_RASPI
@@ -384,7 +384,7 @@ void stepDisplay(void)
    glutPostRedisplay();
 #if defined(__MACH__)
    glutCheckLoop();
-#elif
+#else
    glutMainLoopEvent();
 #endif
 }
