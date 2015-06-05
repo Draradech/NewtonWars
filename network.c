@@ -256,7 +256,7 @@ void sendShotFinished(int i, SimShot* s)
    binsend[1] = s->player;
    binsend[2] = s->length;
    memcpy(&binsend[3], s->dot, s->length * 2 * sizeof(float));
-   snd_l(i, 3 + s->length * 2 * sizeof(float), binsend);
+   snd_l(i, 3 + s->length * 2, binsend);
 }
 
 void allSendPlayerLeave(int p)
