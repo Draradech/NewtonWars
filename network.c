@@ -451,6 +451,7 @@ void stepNetwork(void)
                         case 'b':
                         {
                            connection[pi].bot = !connection[pi].bot;
+                           printf("%d\n", connection[pi].bot);
                            if(connection[pi].bot)
                            {
                               sendOwnId(i, pi);
@@ -497,7 +498,11 @@ void stepNetwork(void)
                         }
                      }
 
-                     if(!connection[pi].bot) snd(i, "> ");
+                     if(!connection[pi].bot)
+                     {
+                        printf("sent promt\n");
+                        snd(i, "> ");
+                     }
                   }
                }
             }
