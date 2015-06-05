@@ -303,7 +303,7 @@ void stepNetwork(void)
    {
       for(k = 0; k < conf.maxPlayers; ++k)
       {
-         if(connection[k].socket)
+         if(connection[k].socket && !connection[k].bot)
          {
             snd(connection[k].socket, "\r\n");
             snd(connection[k].socket, sendbuf);
