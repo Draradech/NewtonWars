@@ -240,9 +240,13 @@ void sendPlayerLeave(int i, int p)
 
 void sendPlayerPos(int i, int p)
 {
+   float tmp;
    binsend[0] = MSG_PLAYERPOS;
    binsend[1] = p;
-   memcpy(&binsend[2], &(getPlayer(p)->position), 2 * sizeof(float));
+   tmp = getPlayer(p)->position.x;
+   memcpy(&binsend[2], &tmp, sizeof(float));
+   tmp = getPlayer(p)->position.y;
+   memcpy(&binsend[3], &tmp, sizeof(float));
    snd_l(i, 4, binsend);
 }
 
