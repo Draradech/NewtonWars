@@ -382,6 +382,7 @@ void stepNetwork(void)
                   {
                      connection[k].socket = 0;
                      connection[k].echo = 0;
+                     connection[k].bot = 0;
                      playerLeave(k);
                      allSendPlayerLeave(k);
                      break;
@@ -451,7 +452,6 @@ void stepNetwork(void)
                         case 'b':
                         {
                            connection[pi].bot = !connection[pi].bot;
-                           printf("%d\n", connection[pi].bot);
                            if(connection[pi].bot)
                            {
                               sendOwnId(i, pi);
@@ -500,7 +500,6 @@ void stepNetwork(void)
 
                      if(!connection[pi].bot)
                      {
-                        printf("sent promt\n");
                         snd(i, "> ");
                      }
                   }
@@ -518,6 +517,7 @@ void stepNetwork(void)
          close(connection[k].socket);
          FD_CLR(connection[k].socket, &master);
          connection[k].socket = 0;
-      }
+         connection[k].bot = 0;
+     }
    }   
 }
