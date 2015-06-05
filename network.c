@@ -343,6 +343,7 @@ void stepNetwork(void)
                      connection[k].socket = newfd;
                      playerJoin(k);
                      updateName(k, "Anonymous");
+                     allSendPlayerPos(k);
                      break;
                   }
                }
