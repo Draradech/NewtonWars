@@ -262,7 +262,7 @@ void allSendPlayerLeave(int p)
    {
       if(connection[k].socket && connection[k].bot)
       {
-         sendPlayerLeave(k, p);
+         sendPlayerLeave(connection[k].socket, p);
       }
    }   
 }
@@ -274,7 +274,7 @@ void allSendPlayerPos(int p)
    {
       if(connection[k].socket && connection[k].bot)
       {
-         sendPlayerPos(k, p);
+         sendPlayerPos(connection[k].socket, p);
       }
    }   
 }
@@ -286,7 +286,7 @@ void allSendShotFinished(SimShot* s)
    {
       if(connection[k].socket && connection[k].bot)
       {
-         sendShotFinished(k, s);
+         sendShotFinished(connection[k].socket, s);
       }
    }   
 }
@@ -496,7 +496,7 @@ void stepNetwork(void)
                         }
                      }
 
-                     snd(i, "> ");
+                     if(!connection[pi].bot) snd(i, "> ");
                   }
                }
             }
