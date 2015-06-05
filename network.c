@@ -94,7 +94,7 @@ static void snd_l(int socket, int len, uint32_t* msg)
    #else
    flags = MSG_NOSIGNAL;
    #endif
-   if(send(socket, msg, len, flags) == -1)
+   if(send(socket, msg, sizeof(uint32_t)*len, flags) == -1)
    {
       print_error("send");
    }
