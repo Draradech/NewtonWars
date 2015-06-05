@@ -7,6 +7,7 @@
 #include <math.h>
 
 #include "config.h"
+#include "network.h"
 
 static SimPlanet* planet;
 static SimPlayer* player;
@@ -124,6 +125,7 @@ static void missileEnd(SimShot* s)
 {
    s->missile.live = 0;
    s->dot[s->length++] = d2f(s->missile.position);
+   allSendShotFinished(s);
 }
 
 static void planetHit(SimShot* s)
@@ -138,6 +140,7 @@ static void playerHit(SimShot* s, int p, int p2)
    player[p2].deaths++;
    initPlayer(p2, 0);
    missileEnd(s);
+   allSendPlayerPos(p2);
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
       player[pl].valid = 0;
@@ -167,6 +170,7 @@ static void initShot(int pl)
    m->leftSource = 0;
    s->dot[0] = d2f(m->position);
    s->length = 1;
+   s->player = pl;
 }
 
 static void simulate(void)

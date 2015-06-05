@@ -18,7 +18,9 @@ void help(void)
    printf("Valid options:\n");
    printf(" players     maximum number of players, default: 12\n");
    printf(" planets     number of planets, default: 32\n");
+   /*
    printf(" segments    maximum number of segments per shot, default: 2000\n");
+   */
    printf(" steps       simulated substeps per segment, default: 50\n");
    printf(" shots       number of displayed past shots, default: 16\n");
    printf(" fullscreen  enable (1) or disable (0) fullscreen, default: 1\n");
@@ -81,6 +83,7 @@ void config(int* argc, char** argv)
             exit(0);
          }
       }
+      /*
       else if (strcmp(b, "segments") == 0)
       {
          conf.maxSegments = atoi(c);
@@ -90,6 +93,7 @@ void config(int* argc, char** argv)
             exit(0);
          }
       }
+      */
       else if (strcmp(b, "steps") == 0)
       {
          conf.segmentSteps = atoi(c);

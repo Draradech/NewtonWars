@@ -40,12 +40,14 @@ typedef struct
    char msgbuf[128];
    int msgbufindex;
    int echo;
+   int bot;
 } connection_t;
 
 fd_set master, readfds;
 int fdmax, listener;
 char buf[128];
 char sendbuf[128];
+uint32_t binsend[5000];
 connection_t* connection;
 
 static void print_error(const char* msg)
@@ -79,6 +81,20 @@ static void snd(int socket, char* msg)
    flags = MSG_NOSIGNAL;
    #endif
    if(send(socket, msg, strlen(msg), flags) == -1)
+   {
+      print_error("send");
+   }
+}
+
+static void snd_l(int socket, int len, uint32_t* msg)
+{
+   int flags;
+   #if defined __APPLE__ || defined _WIN32
+   flags = 0;
+   #else
+   flags = MSG_NOSIGNAL;
+   #endif
+   if(send(socket, msg, len, flags) == -1)
    {
       print_error("send");
    }
@@ -208,9 +224,76 @@ void initNetwork(void)
    printf("waiting for connections...\n");
 }
 
+void sendOwnId(int i, int p)
+{
+   binsend[0] = MSG_OWNID;
+   binsend[1] = p;
+   snd_l(i, 2, binsend);
+}
+
+void sendPlayerLeave(int i, int p)
+{
+   binsend[0] = MSG_PLAYERLEAVE;
+   binsend[1] = p;
+   snd_l(i, 2, binsend);
+} 
+
+void sendPlayerPos(int i, int p)
+{
+   binsend[0] = MSG_PLAYERPOS;
+   binsend[1] = p;
+   memcpy(&binsend[2], &(getPlayer(p)->position), 2 * sizeof(float));
+   snd_l(i, 4, binsend);
+}
+
+void sendShotFinished(int i, SimShot* s)
+{
+   binsend[0] = MSG_SHOTFINISHED;
+   binsend[1] = s->player;
+   binsend[2] = s->length;
+   memcpy(&binsend[3], s->dot, s->length * 2 * sizeof(float));
+   snd_l(i, 3 + s->length * 2 * sizeof(float), binsend);
+}
+
+void allSendPlayerLeave(int p)
+{
+   int k;
+   for(k = 0; k < conf.maxPlayers; ++k)
+   {
+      if(connection[k].socket && connection[k].bot)
+      {
+         sendPlayerLeave(k, p);
+      }
+   }   
+}
+
+void allSendPlayerPos(int p)
+{
+   int k;
+   for(k = 0; k < conf.maxPlayers; ++k)
+   {
+      if(connection[k].socket && connection[k].bot)
+      {
+         sendPlayerPos(k, p);
+      }
+   }   
+}
+
+void allSendShotFinished(SimShot* s)
+{
+   int k;
+   for(k = 0; k < conf.maxPlayers; ++k)
+   {
+      if(connection[k].socket && connection[k].bot)
+      {
+         sendShotFinished(k, s);
+      }
+   }   
+}
+
 void stepNetwork(void)
 {
-   int i, k, pi, nbytes, newfd;
+   int i, k, pi, pi2, nbytes, newfd;
    char remoteIP[INET6_ADDRSTRLEN];
    struct sockaddr_storage remoteaddr;
    socklen_t addrlen;
@@ -299,6 +382,7 @@ void stepNetwork(void)
                      connection[k].socket = 0;
                      connection[k].echo = 0;
                      playerLeave(k);
+                     allSendPlayerLeave(k);
                      break;
                   }
                }   
@@ -361,6 +445,22 @@ void stepNetwork(void)
                         case 'c':
                         {
                            clearTraces(pi);
+                           break;
+                        }
+                        case 'b':
+                        {
+                           connection[pi].bot = !connection[pi].bot;
+                           if(connection[pi].bot)
+                           {
+                              sendOwnId(i, pi);
+                              for(pi2 = 0; pi2 < conf.maxPlayers; ++pi2)
+                              {
+                                 if(connection[pi2].socket)
+                                 {
+                                    sendPlayerPos(i, pi2);
+                                 }
+                              }
+                           }
                            break;
                         }
                         case 'f':

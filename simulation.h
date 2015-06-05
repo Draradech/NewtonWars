@@ -16,6 +16,7 @@ typedef struct
    Vec2f* dot;
    SimMissile missile;
    int length;
+   int player;
 } SimShot;
 
 typedef struct
