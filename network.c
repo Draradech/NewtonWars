@@ -498,6 +498,7 @@ void stepNetwork(void)
                         case 'r':
                         {
                            validateOld(pi);
+                           break;
                         }
                         default:
                         {
