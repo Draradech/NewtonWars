@@ -48,6 +48,7 @@ static void initPlayer(int p, int clear)
    {
       player[p].angle = 0.0;
       player[p].velocity = 10.0;
+      player[p].oldVelocity = 10.0;
       player[p].deaths = 0;
       player[p].kills = 0;
       player[p].shots = 0;
@@ -304,6 +305,7 @@ void stepSimulation(void)
       initShot(currentPlayer);
       player[currentPlayer].valid = 0;
       player[currentPlayer].velocity = 10.0;
+      player[currentPlayer].oldVelocity = 10.0;
       player[currentPlayer].didShoot = 1;
    }
    simulate();
@@ -352,9 +354,16 @@ void updateAngle(int p, double a)
    player[p].valid = 1;  
 }
 
+void validateOld(int p)
+{
+   player[p].valid = 1;  
+   player[p].velocity = player[p].oldVelocity;
+}
+
 void updateVelocity(int p, double v)
 {
    player[p].velocity = LIMIT(v, 0.0, 15.0);
+   player[p].oldVelocity = LIMIT(v, 0.0, 15.0);
 }
 
 void updateName(int p, char* n)

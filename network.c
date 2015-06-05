@@ -495,6 +495,10 @@ void stepNetwork(void)
                            connection[pi].echo = !connection[pi].echo;
                            break;
                         }
+                        case 'r':
+                        {
+                           validateOld(pi);
+                        }
                         default:
                         {
                            updateAngle(pi, atof(connection[pi].msgbuf));
