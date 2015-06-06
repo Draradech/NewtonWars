@@ -527,6 +527,7 @@ void stepNetwork(void)
          FD_CLR(connection[k].socket, &master);
          connection[k].socket = 0;
          connection[k].bot = 0;
+         allSendPlayerLeave(k);
      }
    }   
 }
