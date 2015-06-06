@@ -139,8 +139,8 @@ static void playerHit(SimShot* s, int p, int p2)
    int pl;
    player[p].kills++;
    player[p2].deaths++;
-   initPlayer(p2, 0);
    missileEnd(s);
+   initPlayer(p2, 0);
    allSendPlayerPos(p2);
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
