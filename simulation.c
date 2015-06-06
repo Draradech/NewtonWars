@@ -258,6 +258,7 @@ static void simulate(void)
          if(s->length == conf.maxSegments)
          {
             s->missile.live = 0;
+            allSendShotFinished(s);
          }
       }
    }
