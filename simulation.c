@@ -351,6 +351,7 @@ void playerLeave(int p)
 
 void updateAngle(int p, double a)
 {
+   if(!isnormal(a)) a = 0.0;
    player[p].angle = a;
    player[p].valid = 1;  
 }
@@ -395,6 +396,7 @@ void reinitialize(void)
       if(player[pl].active)
       {
          initPlayer(pl, 1);
+         allSendPlayerPos(pl);
       }
    }
 }
