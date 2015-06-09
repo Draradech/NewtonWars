@@ -15,10 +15,17 @@ int main(int argc, char** argv)
    initSimulation();
    initDisplay(&argc, argv);
 
+   int i = 0;
    for(;;)
    {
       stepNetwork();
       stepSimulation();
+      if(overdrive)
+      {
+         i++;
+         i %= 1000;
+         if(i != 0) continue;
+      }
       stepDisplay();
    };
 

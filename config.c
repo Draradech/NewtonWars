@@ -124,7 +124,7 @@ void config(int* argc, char** argv)
       else if (strcmp(b, "timeout") == 0)
       {
          conf.timeout = atoi(c);
-         if(conf.timeout > 120 || conf.timeout < 0)
+         if(conf.timeout > 12000 || conf.timeout < 0)
          {
             printf("timeout needs to be between 0 and 120\n");
             exit(0);

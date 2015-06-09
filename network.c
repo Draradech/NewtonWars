@@ -49,6 +49,7 @@ char buf[128];
 char sendbuf[128];
 uint32_t binsend[5000];
 connection_t* connection;
+int overdrive;
 
 static void print_error(const char* msg)
 {
@@ -430,7 +431,7 @@ void stepNetwork(void)
                         snd(i, connection[pi].msgbuf);
                         snd(i, "\r\n");
                      }
-                     printf("%16s (%d): \"%s\"\n", getPlayer(pi)->name, pi, connection[pi].msgbuf);
+                     if(!overdrive)printf("%16s (%d): \"%s\"\n", getPlayer(pi)->name, pi, connection[pi].msgbuf);
                      switch(connection[pi].msgbuf[0])
                      {
                         case 'n':
@@ -451,6 +452,11 @@ void stepNetwork(void)
                         case 'c':
                         {
                            clearTraces(pi);
+                           break;
+                        }
+                        case 'o':
+                        {
+                           overdrive = !overdrive;
                            break;
                         }
                         case 'b':
