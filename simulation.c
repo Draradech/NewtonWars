@@ -53,6 +53,7 @@ static void initPlayer(int p, int clear)
       player[p].kills = 0;
       player[p].selfkills = 0;
       player[p].shots = 0;
+      player[p].watch = 0;
    }
 
    player[p].active = 1;
@@ -119,8 +120,10 @@ static void nextPlayer(void)
    do
    {
       currentPlayer = (currentPlayer + 1) % conf.maxPlayers;
-   } while (currentPlayer != initial && !player[currentPlayer].active);
+   } while (currentPlayer != initial && !player[currentPlayer].active && !player[currentPlayer].watch);
    player[currentPlayer].didShoot = 0;
+   if(player[currentPlayer].watch)
+     player[currentPlayer].didShoot = 1;
 }
 
 static void missileEnd(SimShot* s)
@@ -190,6 +193,7 @@ static void simulate(void)
       for(pl = 0; pl < conf.maxPlayers; ++pl)
       {
          SimPlayer* p = &(player[pl]);
+         if(p->watch) continue;
          if(!p->active) continue;
          for(sh = 0; sh < conf.numShots; ++sh)
          {
@@ -251,6 +255,7 @@ static void simulate(void)
    {
       SimPlayer* p = &(player[pl]);
       if(!p->active) continue;
+      if(p->watch) continue;
       if(p->timeout) p->timeout--;
       if(p->valid || actp == 1) p->timeout = conf.timeout;
       for(sh = 0; sh < conf.numShots; ++sh)
@@ -298,10 +303,10 @@ void stepSimulation(void)
         && player[currentPlayer].shot[player[currentPlayer].currentShot].missile.live == 0
         && player[currentPlayer].didShoot
         )
-     || player[currentPlayer].timeout == 0
+     || player[currentPlayer].timeout == 0 || player[currentPlayer].watch
      )
    {
-      if(player[currentPlayer].timeout == 0) player[currentPlayer].timeoutcnt++;
+      if(player[currentPlayer].timeout == 0 && !player[currentPlayer].watch) player[currentPlayer].timeoutcnt++;
       nextPlayer();
    }
 
@@ -365,6 +370,11 @@ void validateOld(int p)
 {
    player[p].valid = 1;  
    player[p].velocity = player[p].oldVelocity;
+}
+
+void toggleWatch(int p)
+{
+  player[p].watch ^= 1;
 }
 
 void updateVelocity(int p, double v)

@@ -444,6 +444,11 @@ void stepNetwork(void)
                            updateVelocity(pi, atof(connection[pi].msgbuf + 2));
                            break;
                         }
+			case 'w':
+			{
+			   toggleWatch(pi);
+			   break;
+			}
                         case 'z':
                         {
                            updateZoom(atof(connection[pi].msgbuf + 2));

@@ -27,6 +27,7 @@ typedef struct
    double angle;
    double velocity;
    double oldVelocity;
+   int watch;
    int deaths;
    int kills;
    int selfkills;
@@ -54,6 +55,7 @@ void updateVelocity(int p, double v);
 void updateName(int p, char* n);
 void clearTraces(int p);
 void reinitialize(void);
+void toggleWatch(int p);
 
 SimShot* getShot(int p, int s);
 SimPlanet* getPlanet(int i);
