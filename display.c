@@ -141,7 +141,7 @@ static void drawPlayers(int offset, int activeP)
       x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
       y = (1 + offset) * 24.0;
       if (p / 6) y = uiH - 3.0;
-      sprintf(buffer, "%s%s (%d:%d)%s", p == getCurrentPlayer() ? "> " : "  ", pl->name, pl->kills, pl->deaths, p == getCurrentPlayer() ? " <" : "");
+      sprintf(buffer, "%s%s (%d:%d:%d)%s", p == getCurrentPlayer() ? "> " : "  ", pl->name, pl->kills, pl->deaths,pl->selfkills, p == getCurrentPlayer() ? " <" : "");
       drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
 
       if(conf.timeout && activeP > 1)

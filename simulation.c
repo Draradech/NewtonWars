@@ -51,6 +51,7 @@ static void initPlayer(int p, int clear)
       player[p].oldVelocity = 10.0;
       player[p].deaths = 0;
       player[p].kills = 0;
+      player[p].selfkills = 0;
       player[p].shots = 0;
    }
 
@@ -137,8 +138,12 @@ static void planetHit(SimShot* s)
 static void playerHit(SimShot* s, int p, int p2)
 {
    int pl;
-   player[p].kills++;
-   player[p2].deaths++;
+   if(p == p2) {
+     player[p].selfkills++;
+   } else {
+     player[p].kills++;
+     player[p2].deaths++;
+   }
    missileEnd(s);
    initPlayer(p2, 0);
    allSendPlayerPos(p2);
