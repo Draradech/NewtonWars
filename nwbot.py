@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import socket
 import struct
 import math
@@ -23,7 +24,7 @@ def recvall(sock, count):
    return buf
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect(("192.168.2.107", 3490))
+s.connect(("127.0.0.1", 3490))
 
 s.send("n Stupobot\n")
 readall(s)
@@ -57,6 +58,8 @@ while True:
          recvall(s, 8)
       if pid == mypid:
          angle += 361 / 3.0
+	 if angle > 180:
+	   angle -= 360
          s.send("v %f\n%f\n" % (speed, angle))
    else:
       print "Unexpected data: %s" % repr(data)

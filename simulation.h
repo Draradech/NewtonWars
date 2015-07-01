@@ -26,6 +26,7 @@ typedef struct
    Vec2d position;
    double angle;
    double velocity;
+   double energy;
    double oldVelocity;
    int watch;
    int deaths;
@@ -53,6 +54,7 @@ void updateAngle(int p, double a);
 void validateOld(int p);
 void updateVelocity(int p, double v);
 void updateName(int p, char* n);
+void tankEnergy(int p);
 void clearTraces(int p);
 void reinitialize(void);
 void toggleWatch(int p);

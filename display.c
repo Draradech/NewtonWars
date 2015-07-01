@@ -152,6 +152,14 @@ static void drawPlayers(int offset, int activeP)
          sprintf(buffer, "  %.0lf", pl->timeout / 60.0);
          drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
       }
+      if((conf.mode & GM_ENERGY) != 0)
+      {
+         x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
+         y = (3 + offset) * 24.0;
+         if (p / 6) y = uiH - 3.0 - (2 * 24.0);
+         sprintf(buffer, " E %.4f", pl->energy);
+         drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
+      }
    }
 }
 
