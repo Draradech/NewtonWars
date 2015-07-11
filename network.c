@@ -32,7 +32,7 @@
 
 #define PORT "3490"
 #define BACKLOG 4
-#define WELCOME "\r\nUse \"n name\" to change name, \"v velocity\" to change velocity or \"c\" to clear past shots.\r\nEverything else is interpreted as a shooting angle.\r\n\r\n> "
+#define WELCOME "\r\nUse \"n name\" to change name, \"v velocity\" to change velocity, \"c\" to clear past shots or \"q\" to close the connection.\r\nEverything else is interpreted as a shooting angle.\r\n\r\n> "
 
 typedef struct
 {
