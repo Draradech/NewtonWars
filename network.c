@@ -32,7 +32,7 @@
 
 #define PORT "3490"
 #define BACKLOG 4
-#define WELCOME "\r\nUse \"n name\" to change name, \"v velocity\" to change velocity or \"c\" to clear past shots.\r\nEverything else is interpreted as a shooting angle.\r\n\r\n> "
+#define WELCOME "\r\nUse \"n name\" to change name, \"v velocity\" to change velocity, \"c\" to clear past shots or \"q\" to close the connection.\r\nEverything else is interpreted as a shooting angle.\r\n\r\n> "
 
 typedef struct
 {
@@ -225,6 +225,18 @@ void initNetwork(void)
    printf("waiting for connections...\n");
 }
 
+void disconnectPlayer(int p)
+{
+   int socket = connection[p].socket;
+   connection[p].echo = 0;
+   playerLeave(p);
+   close(connection[p].socket);
+   FD_CLR(connection[p].socket, &master);
+   connection[p].socket = 0;
+   connection[p].bot = 0;
+   printf("socket %d closed\n", socket);
+}
+
 void sendOwnId(int i, int p)
 {
    binsend[0] = MSG_OWNID;
@@ -385,10 +397,7 @@ void stepNetwork(void)
                {
                   if(connection[k].socket == i)
                   {
-                     connection[k].socket = 0;
-                     connection[k].echo = 0;
-                     connection[k].bot = 0;
-                     playerLeave(k);
+                     disconnectPlayer(k);
                      allSendPlayerLeave(k);
                      break;
                   }
@@ -501,6 +510,12 @@ void stepNetwork(void)
                            connection[pi].echo = !connection[pi].echo;
                            break;
                         }
+                        case 'q':
+                        {
+                           disconnectPlayer(pi);
+                           allSendPlayerLeave(pi);
+                           break;
+                        }
                         case 'r':
                         {
                            validateOld(pi);
@@ -513,7 +528,7 @@ void stepNetwork(void)
                         }
                      }
 
-                     if(!connection[pi].bot)
+                     if(connection[pi].socket && !connection[pi].bot)
                      {
                         snd(i, "> ");
                      }
@@ -527,12 +542,7 @@ void stepNetwork(void)
    {
       if(getPlayer(k)->active && getPlayer(k)->timeoutcnt > 2)
       {
-         connection[k].echo = 0;
-         playerLeave(k);
-         close(connection[k].socket);
-         FD_CLR(connection[k].socket, &master);
-         connection[k].socket = 0;
-         connection[k].bot = 0;
+         disconnectPlayer(k);
          allSendPlayerLeave(k);
      }
    }   
