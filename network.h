@@ -15,6 +15,4 @@ void allSendPlayerPos(int p);
 void allSendShotFinished(SimShot* s);
 void disconnectPlayer(int p);
 
-extern int overdrive;
-
 #endif /* _NETWORK_H_ */

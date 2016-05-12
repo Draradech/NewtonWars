@@ -41,7 +41,7 @@ typedef struct
    int msgbufindex;
    int echo;
    int bot;
-   char remoteIP[INET6_ADDRSTRLEN];
+   int local;
 } connection_t;
 
 fd_set master, readfds;
@@ -309,20 +309,6 @@ void allSendShotFinished(SimShot* s)
    }   
 }
 
-int is_from_localhost(connection_t thisconnection)
-{
-  if(strcmp(thisconnection.remoteIP,"127.0.0.1") == 0) {
-    return 1;
-  }
-  if(strcmp(thisconnection.remoteIP,"::ffff:127.0.0.1") == 0) {
-    return 1;
-  }
-  if(strcmp(thisconnection.remoteIP,"::1") == 0) {
-    return 1;
-  }
-  return 0;
-}
-
 void stepNetwork(void)
 {
    int i, k, pi, pi2, nbytes, newfd;
@@ -373,7 +359,10 @@ void stepNetwork(void)
                   if(connection[k].socket == 0)
                   {
                      connection[k].socket = newfd;
-                     strncpy(connection[k].remoteIP,remoteIP,INET6_ADDRSTRLEN);
+                     connection[k].local = (  (strcmp(remoteIP,"127.0.0.1") == 0)
+                                           || (strcmp(remoteIP,"::ffff:127.0.0.1") == 0)
+                                           || (strcmp(remoteIP,"::1") == 0)
+                                           );
                      playerJoin(k);
                      updateName(k, "Anonymous");
                      allSendPlayerPos(k);
@@ -466,9 +455,10 @@ void stepNetwork(void)
                         }
                         case 't':
                         {
-			  if(is_from_localhost(connection[pi])) {
-                           tankEnergy(atoi(connection[pi].msgbuf + 2));
-			  }
+                           if(connection[pi].local)
+                           {
+                              tankEnergy(atoi(connection[pi].msgbuf + 2));
+                           }
                           break;
                         }
                         case 'v':
@@ -476,32 +466,38 @@ void stepNetwork(void)
                            updateVelocity(pi, atof(connection[pi].msgbuf + 2));
                            break;
                         }
-			case 'w':
-			{
-			   toggleWatch(pi);
-			   break;
-			}
+			               case 'w':
+			               {
+                           if(connection[pi].local)
+                           {
+   			                  toggleWatch(pi);
+                           }
+			                  break;
+			               }
                         case 'z':
                         {
-                           updateZoom(atof(connection[pi].msgbuf + 2));
+                           if(connection[pi].local)
+                           {
+                              updateZoom(atof(connection[pi].msgbuf + 2));
+                           }
                            break;
                         }
-			case 'T':
-			{
-			  if(is_from_localhost(connection[pi])) {
-		            double throttle = atof(connection[pi].msgbuf + 2);
-			    conf.throttle.tv_sec= throttle;
-			    conf.throttle.tv_nsec=(throttle - conf.throttle.tv_sec) * 1000000000;
-			  }
-			  break;
-			}
-			case 'D':
-			{
-			  if(is_from_localhost(connection[pi])) {
-			    conf.debug = atoi(connection[pi].msgbuf + 2);
-			  }
-			  break;
-			}
+                        case 'T':
+                        {
+                           if(connection[pi].local)
+                           {
+                              conf.throttle = atoi(connection[pi].msgbuf + 2);
+                           }
+                           break;
+                        }
+                        case 'D':
+                        {
+                           if(connection[pi].local)
+                           {
+                              conf.debug = atoi(connection[pi].msgbuf + 2);
+                           }
+                           break;
+                        }
                         case 'c':
                         {
                            clearTraces(pi);
@@ -509,9 +505,10 @@ void stepNetwork(void)
                         }
                         case 'o':
                         {
-			   if(is_from_localhost(connection[pi])) {
+                           if(connection[pi].local)
+                           {
                              overdrive = !overdrive;
-			   }
+                           }
                            break;
                         }
                         case 'b':
@@ -532,12 +529,15 @@ void stepNetwork(void)
                         }
                         case 'f':
                         {
-                           toggleFps();
+                           if(connection[pi].local)
+                           {
+                              toggleFps();
+                           }
                            break;
                         }
                         case 'i':
                         {
-                           if(strcmp("init", connection[pi].msgbuf) == 0)
+                           if(connection[pi].local)
                            {
                               reinitialize();
                            }
@@ -545,7 +545,7 @@ void stepNetwork(void)
                         }
                         case 'x':
                         {
-                           if(strcmp("xit", connection[pi].msgbuf) == 0)
+                           if(connection[pi].local)
                            {
                               exit(0);
                            }

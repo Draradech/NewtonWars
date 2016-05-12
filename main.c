@@ -6,6 +6,18 @@
 #include "simulation.h"
 #include "display.h"
 
+void millisleep(int millis)
+{
+   #ifndef _WIN32
+   struct timespec ts;
+   ts.tv_sec = millis / 1000;
+   ts.tv_nsec = (millis % 1000) * 1000000;
+   nanosleep(&ts, NULL);
+   #else
+   // todo
+   #endif
+}
+
 int main(int argc, char** argv)
 {
    srand(time(0));
@@ -20,14 +32,14 @@ int main(int argc, char** argv)
    {
       stepNetwork();
       stepSimulation();
-      if(overdrive)
+      if(conf.fastmode)
       {
          i++;
          i %= 1000;
          if(i != 0) continue;
       }
       stepDisplay();
-      nanosleep(&conf.throttle,NULL);
+      millisleep(conf.throttle);
    };
 
    return 0;

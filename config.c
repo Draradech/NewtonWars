@@ -5,7 +5,6 @@
 #include <string.h>
 #include <math.h>
 
-// 2000000.000000
 #define A 2e6
 
 Config conf;
@@ -17,26 +16,28 @@ void help(void)
    printf("Usage: nw [OPTION VALUE] [OPTION VALUE] ...\n");
    printf("\n");
    printf("Valid options:\n");
-   printf(" players     maximum number of players, default: 12\n");
-   printf(" planets     number of planets, default: 32\n");
-   /*
-   printf(" segments    maximum number of segments per shot, default: 2000\n");
-   */
-   printf(" steps       simulated substeps per segment, default: 50\n");
-   printf(" shots       number of displayed past shots, default: 16\n");
-   printf(" fullscreen  enable (1) or disable (0) fullscreen, default: 1\n");
-   printf(" timeout     timeout in seconds to enter new valid shot, use 0 to disable, default: 20\n");
-   printf(" ratio       aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats), default: 4:3\n");
-   printf(" ip          if set and a free slot exists, display 'to play, telnet \"ip\" 4390', default: empty\n");
-   printf(" mode        bit pattern, 1 == energy, 2 == parallel, 4 == multimissile, 8 == overdrive, default: 0\n");
-   printf(" debug       bit pattern, default: 0\n");
-   printf(" playerdiameter default: 4.0\n");
-   printf(" marginleft   default: 500.0\n");
-   printf(" marginright  default: 500.0\n");
-   printf(" margintop    default: 500.0\n");
-   printf(" marginbottom default: 500.0\n");
-   printf(" margins     sets all margins at once to the same given value\n");
-   printf(" throttle    delay for every step in seconds, default: 0.0\n");
+   printf(" players       maximum number of players, default: 12\n");
+   printf(" planets       number of planets, default: 32\n");
+   printf(" steps         simulated substeps per segment, default: 50\n");
+   printf(" shots         number of displayed past shots, default: 16\n");
+   printf(" fullscreen    enable (1) or disable (0) fullscreen, default: 1\n");
+   printf(" timeout       timeout in seconds to enter new valid shot, use 0 to disable, default: 30\n");
+   printf(" ratio         aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats), default: 16:9\n");
+   printf(" ip            if set and a free slot exists, display 'to play, telnet \"ip\" 4390', default: empty\n");
+   printf(" energy        limit available energy (default: 1)\n");
+   //printf(" realtime      realtime mode (implies energy, default: 1)\n");
+   printf(" playersize    radius of players (default: 4.0)\n");
+   printf("\n");
+   printf("Margins around the battlefield before shots are voided (default: 500.0)\n");
+   printf(" marginleft\n");
+   printf(" marginright\n");
+   printf(" margintop\n");
+   printf(" marginbottom\n");
+   printf(" margins       set all margins at once\n");
+   printf("\n");
+   printf("DEBUG options\n");
+   printf(" throttle      delay for every step in ms, default: 0.0\n");
+   printf(" debug         debug output, default: 0\n");
    printf("\n");
 }
 
@@ -51,20 +52,20 @@ void config(int* argc, char** argv)
    conf.segmentSteps = 50;
    conf.numShots = 16;
    conf.fullscreen = 1;
-   conf.throttle.tv_sec = 0;
-   conf.throttle.tv_nsec = 0;
-   conf.debug = 0;
-   conf.playerDiameter = 4.0;
+   conf.playerSize = 4.0;
    conf.timeout = 20 * 60;
    conf.ip = 0;
 
+   conf.throttle = 0;
+   conf.debug = 0;
+
    conf.margintop = conf.marginleft = conf.marginright = conf.marginbottom = 500;
+   #if (0)
    conf.battlefieldW = sqrt(A * 4 / 3); /* 1632 */
    conf.battlefieldH = sqrt(A * 3 / 4); /* 1224 */
-   #if (0)
+   #endif
    conf.battlefieldW = sqrt(A * 16 / 9); /* 1885 */
    conf.battlefieldH = sqrt(A * 9 / 16); /* 1060 */
-   #endif
 
    for(i = 1; i < *argc; ++i)
    {
@@ -98,7 +99,6 @@ void config(int* argc, char** argv)
             exit(0);
          }
       }
-      /*
       else if (strcmp(b, "segments") == 0)
       {
          conf.maxSegments = atoi(c);
@@ -108,7 +108,6 @@ void config(int* argc, char** argv)
             exit(0);
          }
       }
-      */
       else if (strcmp(b, "steps") == 0)
       {
          conf.segmentSteps = atoi(c);
@@ -194,24 +193,38 @@ void config(int* argc, char** argv)
       else if (strcmp(b, "debug") == 0)
       {
          conf.debug = atoi(c);
+         if(conf.debug > 1 || conf.debug < 0)
+         {
+            printf("debug needs to be 0 or 1\n");
+            exit(0);
+         }
       }
-      else if (strcmp(b, "mode") == 0)
+      else if (strcmp(b, "energy") == 0)
       {
-         conf.mode = atoi(c);
+         conf.energy = atoi(c);
+         if(conf.energy > 1 || conf.energy < 0)
+         {
+            printf("energy needs to be 0 or 1\n");
+            exit(0);
+         }
       }
-      else if (strcmp(b, "playerdiameter") == 0)
+      else if (strcmp(b, "playersize") == 0)
       {
-	conf.playerDiameter = atof(c);
-	if(conf.playerDiameter > 10 || conf.playerDiameter <= 0) {
-          printf("playerdiameter needs to be > 0.0 and <= 10.0\n");
-          exit(0);
-	}
+         conf.playerSize = atof(c);
+         if(conf.playerSize > 10 || conf.playerSize <= 0)
+         {
+            printf("playersize needs to be > 0.0 and <= 10.0\n");
+            exit(0);
+         }
       }
       else if (strcmp(b, "throttle") == 0)
       {
-	double throttle = atof(c);
-	conf.throttle.tv_sec = throttle;
-	conf.throttle.tv_nsec=(throttle - conf.throttle.tv_sec) * 1000000000;
+         conf.throttle = atoi(c);
+         if(conf.throttle > 10000 || conf.throttle < 0)
+         {
+            printf("playersize needs to be >= 0 and <= 10000\n");
+            exit(0);
+         }
       }
       else if (strcmp(b, "ratio") == 0)
       {
