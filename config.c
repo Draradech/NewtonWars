@@ -55,6 +55,7 @@ void config(int* argc, char** argv)
    conf.playerSize = 4.0;
    conf.timeout = 20 * 60;
    conf.ip = 0;
+   conf.energy = 1;
 
    conf.throttle = 0;
    conf.debug = 0;

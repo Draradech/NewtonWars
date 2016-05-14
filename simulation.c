@@ -324,7 +324,9 @@ void stepSimulation(void)
             )
          || (  (player[currentPlayer].energy < player[currentPlayer].velocity)
             && (conf.energy)
-	         )
+            && (!player[currentPlayer].didShoot)
+            && (player[currentPlayer].valid)
+            )
          )
       || (player[currentPlayer].timeout == 0)
       || (player[currentPlayer].watch)
@@ -418,8 +420,9 @@ void toggleWatch(int p)
 
 void updateVelocity(int p, double v)
 {
-   player[p].velocity = LIMIT(v, 0.0, 15.0);
-   player[p].oldVelocity = LIMIT(v, 0.0, 15.0);
+   double limit = conf.energy ? 50.0 : 15.0;
+   player[p].velocity = LIMIT(v, 0.0, limit);
+   player[p].oldVelocity = LIMIT(v, 0.0, limit);
 }
 
 void tankEnergy(int p)
