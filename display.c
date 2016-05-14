@@ -230,7 +230,7 @@ static void draw(void)
       glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, 1.0f);
       glPushMatrix();
       glTranslatef(pl->position.x, pl->position.y, 0);
-      glScalef(4.0, 4.0, 1.0);
+      glScalef(conf.playerSize, conf.playerSize, 1.0);
       glVertexPointer(2, GL_FLOAT, 0, vertCircle);
       glDrawArrays(GL_LINE_LOOP, 0, 16);
       glDrawArrays(GL_LINES, 16, 16);

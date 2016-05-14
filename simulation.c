@@ -162,8 +162,8 @@ static void playerHit(SimShot* s, int p, int p2)
    allSendPlayerPos(p2);
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
-      player[pl].valid = 0;
-      player[pl].timeout = conf.timeout * 2;
+      //player[pl].valid = 0;
+      //player[pl].timeout = conf.timeout * 2;
       if(!conf.energy)
       {
         player[pl].velocity = 10.0;
@@ -393,8 +393,8 @@ void playerLeave(int p)
    }
    for(p = 0; p < conf.maxPlayers; ++p)
    {
-      player[p].valid = 0;
-      player[p].timeout = conf.timeout * 2;
+      //player[p].valid = 0;
+      //player[p].timeout = conf.timeout * 2;
       if(!conf.energy) player[p].velocity = 10.0;
       killflash = 1.0;
    }
