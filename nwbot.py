@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 import socket
 import struct
@@ -63,6 +65,8 @@ if __name__ == "__main__":
              print ("Courve: %r" % (struct.unpack("ff", data), ))
           if pid == mypid:
              angle += 361 / 3.0
+             if angle > 180:
+                angle -= 360
              s.send(bytes("v %f\n%f\n" % (speed, angle), 'UTF-8'))
        else:
           print ("Unexpected data: %r" % (data, ))

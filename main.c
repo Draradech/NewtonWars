@@ -27,6 +27,7 @@ int main(int argc, char** argv)
          if(i != 0) continue;
       }
       stepDisplay();
+      nanosleep(&conf.throttle,NULL);
    };
 
    return 0;

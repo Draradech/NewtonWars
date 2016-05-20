@@ -5,6 +5,7 @@
 #include <string.h>
 #include <math.h>
 
+// 2000000.000000
 #define A 2e6
 
 Config conf;
@@ -27,6 +28,15 @@ void help(void)
    printf(" timeout     timeout in seconds to enter new valid shot, use 0 to disable, default: 20\n");
    printf(" ratio       aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats), default: 4:3\n");
    printf(" ip          if set and a free slot exists, display 'to play, telnet \"ip\" 4390', default: empty\n");
+   printf(" mode        bit pattern, 1 == energy, 2 == parallel, 4 == multimissile, 8 == overdrive, default: 0\n");
+   printf(" debug       bit pattern, default: 0\n");
+   printf(" playerdiameter default: 4.0\n");
+   printf(" marginleft   default: 500.0\n");
+   printf(" marginright  default: 500.0\n");
+   printf(" margintop    default: 500.0\n");
+   printf(" marginbottom default: 500.0\n");
+   printf(" margins     sets all margins at once to the same given value\n");
+   printf(" throttle    delay for every step in seconds, default: 0.0\n");
    printf("\n");
 }
 
@@ -41,9 +51,14 @@ void config(int* argc, char** argv)
    conf.segmentSteps = 50;
    conf.numShots = 16;
    conf.fullscreen = 1;
+   conf.throttle.tv_sec = 0;
+   conf.throttle.tv_nsec = 0;
+   conf.debug = 0;
+   conf.playerDiameter = 4.0;
    conf.timeout = 20 * 60;
    conf.ip = 0;
 
+   conf.margintop = conf.marginleft = conf.marginright = conf.marginbottom = 500;
    conf.battlefieldW = sqrt(A * 4 / 3); /* 1632 */
    conf.battlefieldH = sqrt(A * 3 / 4); /* 1224 */
    #if (0)
@@ -112,6 +127,51 @@ void config(int* argc, char** argv)
             exit(0);
          }
       }
+      else if (strcmp(b, "margins") == 0)
+      {
+         conf.margintop = conf.marginleft = conf.marginright = conf.marginbottom = atoi(c);
+         if(conf.margintop < 0 || conf.margintop > 10000)
+         {
+            printf("margins need to be between 0 and 10000\n");
+            exit(0);
+         }
+      }
+      else if (strcmp(b, "margintop") == 0)
+      {
+         conf.margintop = atoi(c);
+         if(conf.margintop < 0 || conf.margintop > 10000)
+         {
+            printf("margintop need to be between 0 and 10000\n");
+            exit(0);
+         }
+      }
+      else if (strcmp(b, "marginleft") == 0)
+      {
+         conf.marginleft = atoi(c);
+         if(conf.marginleft < 0 || conf.marginleft > 10000)
+         {
+            printf("marginleft need to be between 0 and 10000\n");
+            exit(0);
+         }
+      }
+      else if (strcmp(b, "marginright") == 0)
+      {
+         conf.marginright = atoi(c);
+         if(conf.marginright < 0 || conf.marginright > 10000)
+         {
+            printf("marginright need to be between 0 and 10000\n");
+            exit(0);
+         }
+      }
+      else if (strcmp(b, "marginbottom") == 0)
+      {
+         conf.marginbottom = atoi(c);
+         if(conf.marginbottom < 0 || conf.marginbottom > 10000)
+         {
+            printf("marginbottom need to be between 0 and 10000\n");
+            exit(0);
+         }
+      }
       else if (strcmp(b, "fullscreen") == 0)
       {
          conf.fullscreen = atoi(c);
@@ -126,10 +186,32 @@ void config(int* argc, char** argv)
          conf.timeout = atoi(c);
          if(conf.timeout > 12000 || conf.timeout < 0)
          {
-            printf("timeout needs to be between 0 and 120\n");
+            printf("timeout needs to be between 0 and 12000\n");
             exit(0);
          }
          conf.timeout *= 60;
+      }
+      else if (strcmp(b, "debug") == 0)
+      {
+         conf.debug = atoi(c);
+      }
+      else if (strcmp(b, "mode") == 0)
+      {
+         conf.mode = atoi(c);
+      }
+      else if (strcmp(b, "playerdiameter") == 0)
+      {
+	conf.playerDiameter = atof(c);
+	if(conf.playerDiameter > 10 || conf.playerDiameter <= 0) {
+          printf("playerdiameter needs to be > 0.0 and <= 10.0\n");
+          exit(0);
+	}
+      }
+      else if (strcmp(b, "throttle") == 0)
+      {
+	double throttle = atof(c);
+	conf.throttle.tv_sec = throttle;
+	conf.throttle.tv_nsec=(throttle - conf.throttle.tv_sec) * 1000000000;
       }
       else if (strcmp(b, "ratio") == 0)
       {

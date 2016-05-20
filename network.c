@@ -41,6 +41,7 @@ typedef struct
    int msgbufindex;
    int echo;
    int bot;
+   char remoteIP[INET6_ADDRSTRLEN];
 } connection_t;
 
 fd_set master, readfds;
@@ -308,6 +309,20 @@ void allSendShotFinished(SimShot* s)
    }   
 }
 
+int is_from_localhost(connection_t thisconnection)
+{
+  if(strcmp(thisconnection.remoteIP,"127.0.0.1") == 0) {
+    return 1;
+  }
+  if(strcmp(thisconnection.remoteIP,"::ffff:127.0.0.1") == 0) {
+    return 1;
+  }
+  if(strcmp(thisconnection.remoteIP,"::1") == 0) {
+    return 1;
+  }
+  return 0;
+}
+
 void stepNetwork(void)
 {
    int i, k, pi, pi2, nbytes, newfd;
@@ -358,6 +373,7 @@ void stepNetwork(void)
                   if(connection[k].socket == 0)
                   {
                      connection[k].socket = newfd;
+                     strncpy(connection[k].remoteIP,remoteIP,INET6_ADDRSTRLEN);
                      playerJoin(k);
                      updateName(k, "Anonymous");
                      allSendPlayerPos(k);
@@ -448,16 +464,44 @@ void stepNetwork(void)
                            updateName(pi, connection[pi].msgbuf + 2);
                            break;
                         }
+                        case 't':
+                        {
+			  if(is_from_localhost(connection[pi])) {
+                           tankEnergy(atoi(connection[pi].msgbuf + 2));
+			  }
+                          break;
+                        }
                         case 'v':
                         {
                            updateVelocity(pi, atof(connection[pi].msgbuf + 2));
                            break;
                         }
+			case 'w':
+			{
+			   toggleWatch(pi);
+			   break;
+			}
                         case 'z':
                         {
                            updateZoom(atof(connection[pi].msgbuf + 2));
                            break;
                         }
+			case 'T':
+			{
+			  if(is_from_localhost(connection[pi])) {
+		            double throttle = atof(connection[pi].msgbuf + 2);
+			    conf.throttle.tv_sec= throttle;
+			    conf.throttle.tv_nsec=(throttle - conf.throttle.tv_sec) * 1000000000;
+			  }
+			  break;
+			}
+			case 'D':
+			{
+			  if(is_from_localhost(connection[pi])) {
+			    conf.debug = atoi(connection[pi].msgbuf + 2);
+			  }
+			  break;
+			}
                         case 'c':
                         {
                            clearTraces(pi);
@@ -465,7 +509,9 @@ void stepNetwork(void)
                         }
                         case 'o':
                         {
-                           overdrive = !overdrive;
+			   if(is_from_localhost(connection[pi])) {
+                             overdrive = !overdrive;
+			   }
                            break;
                         }
                         case 'b':

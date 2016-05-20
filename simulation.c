@@ -9,6 +9,7 @@
 #include "config.h"
 #include "network.h"
 
+#define MAX_PLANETS	100
 static SimPlanet* planet;
 static SimPlayer* player;
 static int currentPlayer;
@@ -47,11 +48,14 @@ static void initPlayer(int p, int clear)
    if(clear)
    {
       player[p].angle = 0.0;
+      player[p].energy = 0.0;
       player[p].velocity = 10.0;
       player[p].oldVelocity = 10.0;
       player[p].deaths = 0;
       player[p].kills = 0;
+      player[p].selfkills = 0;
       player[p].shots = 0;
+      player[p].watch = 0;
    }
 
    player[p].active = 1;
@@ -118,8 +122,13 @@ static void nextPlayer(void)
    do
    {
       currentPlayer = (currentPlayer + 1) % conf.maxPlayers;
-   } while (currentPlayer != initial && !player[currentPlayer].active);
+   } while (currentPlayer != initial && !player[currentPlayer].active && !player[currentPlayer].watch);
    player[currentPlayer].didShoot = 0;
+   if((conf.mode & GM_ENERGY) != 0) {
+     player[currentPlayer].energy += 10;
+   }
+   if(player[currentPlayer].watch)
+     player[currentPlayer].didShoot = 1;
 }
 
 static void missileEnd(SimShot* s)
@@ -137,8 +146,12 @@ static void planetHit(SimShot* s)
 static void playerHit(SimShot* s, int p, int p2)
 {
    int pl;
-   player[p].kills++;
-   player[p2].deaths++;
+   if(p == p2) {
+     player[p].selfkills++;
+   } else {
+     player[p].kills++;
+     player[p2].deaths++;
+   }
    missileEnd(s);
    initPlayer(p2, 0);
    allSendPlayerPos(p2);
@@ -146,7 +159,9 @@ static void playerHit(SimShot* s, int p, int p2)
    {
       player[pl].valid = 0;
       player[pl].timeout = conf.timeout * 2;
-      player[pl].velocity = 10.0;
+      if((conf.mode & GM_ENERGY) == 0) {
+        player[pl].velocity = 10.0;
+      }
       killflash = 1.0;
    }
    sprintf(deathMessage, "%s killed %s", player[p].name, player[p2].name);
@@ -165,6 +180,9 @@ static void initShot(int pl)
    SimMissile* m = &(s->missile);
 
    m->position = p->position;
+   if((conf.mode & GM_ENERGY) != 0) {
+     p->energy -= p->velocity;
+   }
    m->speed.x = p->velocity * cos(p->angle / 180.0 * M_PI);
    m->speed.y = p->velocity * -sin(p->angle / 180.0 * M_PI);
    m->live = 1;
@@ -185,6 +203,7 @@ static void simulate(void)
       for(pl = 0; pl < conf.maxPlayers; ++pl)
       {
          SimPlayer* p = &(player[pl]);
+         if(p->watch) continue;
          if(!p->active) continue;
          for(sh = 0; sh < conf.numShots; ++sh)
          {
@@ -215,14 +234,15 @@ static void simulate(void)
                if(!player[pl2].active) continue;
                l = distance(player[pl2].position, m->position);
 
-               if (  (l <= 4.0)
+               if (  (l <= conf.playerDiameter)
                   && (m->leftSource == 1)
                   )
                {
+		  if(conf.debug & 1) printf("l = %.5f playerDiameter = %.5f missile.x = %.5f missile.y = %.5f player.x = %5f player.y = %5f\n",l,conf.playerDiameter,m->position.x,m->position.y,player[pl2].position.x,player[pl2].position.y);
                   playerHit(s, pl, pl2);
                }
 
-               if (  (l > 5.0)
+               if (  (l > (conf.playerDiameter + 1))
                   && (pl2 == pl)
                   )
                {
@@ -230,10 +250,10 @@ static void simulate(void)
                }
             }
 
-            if (  (m->position.x < -500)
-               || (m->position.x > conf.battlefieldW + 500)
-               || (m->position.y < -500)
-               || (m->position.y > conf.battlefieldH + 500)
+            if (  (m->position.x < -conf.marginleft)
+               || (m->position.x > conf.battlefieldW + conf.marginright)
+               || (m->position.y < -conf.margintop)
+               || (m->position.y > conf.battlefieldH + conf.marginbottom)
                )
             {
                wallHit(s);
@@ -246,6 +266,7 @@ static void simulate(void)
    {
       SimPlayer* p = &(player[pl]);
       if(!p->active) continue;
+      if(p->watch) continue;
       if(p->timeout) p->timeout--;
       if(p->valid || actp == 1) p->timeout = conf.timeout;
       for(sh = 0; sh < conf.numShots; ++sh)
@@ -289,24 +310,45 @@ void initSimulation(void)
 
 void stepSimulation(void)
 {
+   if(conf.debug & 1) printf("stepSimulation: %s:%d currentPlayer=%d currentPlayer.energy=%.4f currentPlayer.velocity=%.4f\n",__FILE__,__LINE__,currentPlayer,player[currentPlayer].energy, player[currentPlayer].velocity);
    if(  (  player[currentPlayer].active
-        && player[currentPlayer].shot[player[currentPlayer].currentShot].missile.live == 0
-        && player[currentPlayer].didShoot
-        )
-     || player[currentPlayer].timeout == 0
+        && (
+             player[currentPlayer].shot[player[currentPlayer].currentShot].missile.live == 0
+             && (conf.mode & GM_MULTIMISSILE) == 0
+           )
+        && (
+            ( player[currentPlayer].didShoot && (conf.mode & GM_MULTIMISSILE) == 0)
+            || (
+	         player[currentPlayer].energy < player[currentPlayer].velocity
+	         && (conf.mode & GM_ENERGY) != 0
+               )
+	   )
+     )
+     || player[currentPlayer].timeout == 0 
+     || player[currentPlayer].watch 
      )
    {
-      if(player[currentPlayer].timeout == 0) player[currentPlayer].timeoutcnt++;
+      if(
+	  player[currentPlayer].timeout == 0 
+          && !player[currentPlayer].watch
+        ) player[currentPlayer].timeoutcnt++;
+      if(conf.debug & 1) printf("stepSimulation: %s:%d call nextPlayer\n",__FILE__,__LINE__);
       nextPlayer();
    }
 
-   if(player[currentPlayer].active && player[currentPlayer].valid && !player[currentPlayer].didShoot)
+   if(player[currentPlayer].active
+      && player[currentPlayer].valid
+      && !player[currentPlayer].didShoot
+      && (player[currentPlayer].energy >= player[currentPlayer].velocity || (conf.mode & GM_ENERGY) == 0)
+     )
    {
       player[currentPlayer].currentShot = (player[currentPlayer].currentShot + 1) % conf.numShots;
       initShot(currentPlayer);
       player[currentPlayer].valid = 0;
-      player[currentPlayer].velocity = 10.0;
-      player[currentPlayer].oldVelocity = 10.0;
+      if((conf.mode & GM_ENERGY) == 0) {
+        player[currentPlayer].velocity = 10.0;
+        player[currentPlayer].oldVelocity = 10.0;
+      }
       player[currentPlayer].didShoot = 1;
    }
    simulate();
@@ -344,7 +386,9 @@ void playerLeave(int p)
    {
       player[p].valid = 0;
       player[p].timeout = conf.timeout * 2;
-      player[p].velocity = 10.0;
+      if((conf.mode & GM_ENERGY) == 0) {
+        player[p].velocity = 10.0;
+      }
       killflash = 1.0;
    }
 }
@@ -362,10 +406,22 @@ void validateOld(int p)
    player[p].velocity = player[p].oldVelocity;
 }
 
+void toggleWatch(int p)
+{
+  player[p].watch ^= 1;
+}
+
 void updateVelocity(int p, double v)
 {
    player[p].velocity = LIMIT(v, 0.0, 15.0);
    player[p].oldVelocity = LIMIT(v, 0.0, 15.0);
+}
+
+void tankEnergy(int p)
+{
+   if(p >= 0 && p < conf.maxPlayers) {
+     player[p].energy += 100;
+   }
 }
 
 void updateName(int p, char* n)
