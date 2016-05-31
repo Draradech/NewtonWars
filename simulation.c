@@ -47,12 +47,11 @@ static void initPlayer(int p, int clear)
    if(clear)
    {
       player[p].angle = 0.0;
-      player[p].energy = 0.0;
+      player[p].energy = 25.0;
       player[p].velocity = 10.0;
       player[p].oldVelocity = 10.0;
       player[p].deaths = 0;
       player[p].kills = 0;
-      player[p].selfkills = 0;
       player[p].shots = 0;
       player[p].watch = 0;
    }
@@ -118,15 +117,15 @@ static void initPlayer(int p, int clear)
 static void nextPlayer(void)
 {
    int initial = currentPlayer;
+   if(conf.energy)
+   {
+     player[currentPlayer].energy += 10.0;
+   }
    do
    {
       currentPlayer = (currentPlayer + 1) % conf.maxPlayers;
    } while (currentPlayer != initial && !player[currentPlayer].active && !player[currentPlayer].watch);
    player[currentPlayer].didShoot = 0;
-   if(conf.energy)
-   {
-     player[currentPlayer].energy += 10;
-   }
    if(player[currentPlayer].watch)
    {
      player[currentPlayer].didShoot = 1;
@@ -150,7 +149,7 @@ static void playerHit(SimShot* s, int p, int p2)
    int pl;
    if(p == p2)
    {
-     player[p].selfkills++;
+     player[p].deaths++;
    }
    else
    {
@@ -162,8 +161,6 @@ static void playerHit(SimShot* s, int p, int p2)
    allSendPlayerPos(p2);
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
-      //player[pl].valid = 0;
-      //player[pl].timeout = conf.timeout * 2;
       if(!conf.energy)
       {
         player[pl].velocity = 10.0;

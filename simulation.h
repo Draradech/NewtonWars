@@ -31,7 +31,6 @@ typedef struct
    int watch;
    int deaths;
    int kills;
-   int selfkills;
    int shots;
    int active;
    int valid;
