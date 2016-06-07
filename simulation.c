@@ -390,8 +390,6 @@ void playerLeave(int p)
    }
    for(p = 0; p < conf.maxPlayers; ++p)
    {
-      //player[p].valid = 0;
-      //player[p].timeout = conf.timeout * 2;
       if(!conf.energy) player[p].velocity = 10.0;
       killflash = 1.0;
    }
@@ -399,7 +397,7 @@ void playerLeave(int p)
 
 void updateAngle(int p, double a)
 {
-   if(!isnormal(a)) a = 0.0;
+   if(!((a > -720.0) && (a < 720.0))) a = 0.0;
    player[p].angle = a;
    player[p].valid = 1;  
 }

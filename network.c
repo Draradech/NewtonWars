@@ -10,6 +10,7 @@
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <limits.h>
 #else
 #include <unistd.h>
 #include <sys/socket.h>
@@ -26,6 +27,11 @@
 #define close closesocket
 #ifndef IPV6_V6ONLY
 #define IPV6_V6ONLY 27
+#if UINT_MAX == 0xfffffffful
+typedef unsigned int uint32_t;
+#else
+#error "4 byte unsigned int unknown"
+#endif
 #endif
 #else
 #endif

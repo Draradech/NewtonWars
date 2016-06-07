@@ -20,6 +20,8 @@ void millisleep(int millis)
 
 int main(int argc, char** argv)
 {
+   int i = 0;
+
    srand(time(0));
    config(&argc, argv);
 
@@ -27,7 +29,6 @@ int main(int argc, char** argv)
    initSimulation();
    initDisplay(&argc, argv);
 
-   int i = 0;
    for(;;)
    {
       stepNetwork();
