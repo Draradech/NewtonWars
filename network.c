@@ -56,7 +56,6 @@ char buf[128];
 char sendbuf[128];
 uint32_t binsend[5000];
 connection_t* connection;
-int overdrive;
 
 static void print_error(const char* msg)
 {
@@ -507,14 +506,6 @@ void stepNetwork(void)
                         case 'c':
                         {
                            clearTraces(pi);
-                           break;
-                        }
-                        case 'o':
-                        {
-                           if(connection[pi].local)
-                           {
-                             overdrive = !overdrive;
-                           }
                            break;
                         }
                         case 'b':

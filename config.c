@@ -18,9 +18,9 @@ void help(void)
    printf("Valid options:\n");
    printf(" players       maximum number of players, default: 12\n");
    printf(" planets       number of planets, default: 32\n");
-   printf(" steps         simulated substeps per segment, default: 50\n");
    printf(" shots         number of displayed past shots, default: 16\n");
-   printf(" fullscreen    enable (1) or disable (0) fullscreen, default: 1\n");
+   printf(" fullscreen    fullscreen enabled, default: 1\n");
+   printf(" fastmode      render only every 1000th frame, default: 0\n");
    printf(" timeout       timeout in seconds to enter new valid shot, use 0 to disable, default: 30\n");
    printf(" ratio         aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats), default: 16:9\n");
    printf(" ip            if set and a free slot exists, display 'to play, telnet \"ip\" 4390', default: empty\n");
@@ -52,8 +52,9 @@ void config(int* argc, char** argv)
    conf.segmentSteps = 50;
    conf.numShots = 16;
    conf.fullscreen = 1;
+   conf.fastmode = 0;
    conf.playerSize = 4.0;
-   conf.timeout = 20 * 60;
+   conf.timeout = 30 * 60;
    conf.ip = 0;
    conf.energy = 1;
 
@@ -61,10 +62,7 @@ void config(int* argc, char** argv)
    conf.debug = 0;
 
    conf.margintop = conf.marginleft = conf.marginright = conf.marginbottom = 500;
-   #if (0)
-   conf.battlefieldW = sqrt(A * 4 / 3); /* 1632 */
-   conf.battlefieldH = sqrt(A * 3 / 4); /* 1224 */
-   #endif
+
    conf.battlefieldW = sqrt(A * 16 / 9); /* 1885 */
    conf.battlefieldH = sqrt(A * 9 / 16); /* 1060 */
 
@@ -184,9 +182,9 @@ void config(int* argc, char** argv)
       else if (strcmp(b, "timeout") == 0)
       {
          conf.timeout = atoi(c);
-         if(conf.timeout > 12000 || conf.timeout < 0)
+         if(conf.timeout > 120 || conf.timeout < 0)
          {
-            printf("timeout needs to be between 0 and 12000\n");
+            printf("timeout needs to be between 0 and 120\n");
             exit(0);
          }
          conf.timeout *= 60;
@@ -197,6 +195,15 @@ void config(int* argc, char** argv)
          if(conf.debug > 1 || conf.debug < 0)
          {
             printf("debug needs to be 0 or 1\n");
+            exit(0);
+         }
+      }
+      else if (strcmp(b, "fastmode") == 0)
+      {
+         conf.fastmode = atoi(c);
+         if(conf.fastmode > 1 || conf.fastmode < 0)
+         {
+            printf("fastmode needs to be 0 or 1\n");
             exit(0);
          }
       }
