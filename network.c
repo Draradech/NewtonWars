@@ -101,7 +101,7 @@ static void snd_l(int socket, int len, uint32_t* msg)
    #else
    flags = MSG_NOSIGNAL;
    #endif
-   if(send(socket, msg, sizeof(uint32_t)*len, flags) == -1)
+   if(send(socket, (char*)msg, sizeof(uint32_t) * len, flags) == -1)
    {
       print_error("send");
    }
@@ -450,7 +450,10 @@ void stepNetwork(void)
                         snd(i, connection[pi].msgbuf);
                         snd(i, "\r\n");
                      }
-                     if(!overdrive)printf("%16s (%d): \"%s\"\n", getPlayer(pi)->name, pi, connection[pi].msgbuf);
+                     if(!conf.fastmode)
+                     {
+                        printf("%16s (%d): \"%s\"\n", getPlayer(pi)->name, pi, connection[pi].msgbuf);
+                     }
                      switch(connection[pi].msgbuf[0])
                      {
                         case 'n':
