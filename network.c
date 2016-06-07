@@ -62,16 +62,16 @@ static void print_error(const char* msg)
 {
    #if _WIN32
    LPVOID lpMsgBuf;
-   FormatMessage( 
-       FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-       FORMAT_MESSAGE_FROM_SYSTEM | 
-       FORMAT_MESSAGE_IGNORE_INSERTS,
-       NULL,
-       GetLastError(),
-       MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
-       (LPTSTR) &lpMsgBuf,
-       0,
-       NULL 
+   FormatMessage(
+      FORMAT_MESSAGE_ALLOCATE_BUFFER |
+      FORMAT_MESSAGE_FROM_SYSTEM |
+      FORMAT_MESSAGE_IGNORE_INSERTS,
+      NULL,
+      GetLastError(),
+      MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+      (LPTSTR) &lpMsgBuf,
+      0,
+      NULL
    );
    fprintf(stderr, "%s: %s", msg, (LPCTSTR)lpMsgBuf);
    LocalFree( lpMsgBuf );
@@ -472,14 +472,14 @@ void stepNetwork(void)
                            updateVelocity(pi, atof(connection[pi].msgbuf + 2));
                            break;
                         }
-			               case 'w':
-			               {
+                        case 'w':
+                        {
                            if(connection[pi].local)
                            {
-   			                  toggleWatch(pi);
+                              toggleWatch(pi);
                            }
-			                  break;
-			               }
+                           break;
+                        }
                         case 'z':
                         {
                            if(connection[pi].local)
