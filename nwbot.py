@@ -64,7 +64,7 @@ if __name__ == "__main__":
              data = recvall(s, 8)
              print ("Courve: %r" % (struct.unpack("ff", data), ))
           if pid == mypid:
-             angle += 361 / 3.0
+             angle += 361 / 36.0
              if angle > 180:
                 angle -= 360
              s.send(bytes("v %f\n%f\n" % (speed, angle), 'UTF-8'))
