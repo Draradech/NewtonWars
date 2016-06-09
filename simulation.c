@@ -278,7 +278,7 @@ static void simulate(void)
          SimShot* s = &(p->shot[sh]);
          if(!s->missile.live) continue;
          p->timeout = conf.timeout;
-         player[currentPlayer].timeoutcnt = 0;
+         p->timeoutcnt = 0;
          s->dot[s->length++] = d2f(s->missile.position);
          if(s->length == conf.maxSegments)
          {
@@ -314,50 +314,77 @@ void initSimulation(void)
 
 void stepSimulation(void)
 {
-   if (conf.debug) printf("stepSimulation: %s:%d currentPlayer=%d currentPlayer.energy=%.4f currentPlayer.velocity=%.4f\n",__FILE__,__LINE__,currentPlayer,player[currentPlayer].energy, player[currentPlayer].velocity);
-   if (  (  (  (player[currentPlayer].active)
-            && (player[currentPlayer].shot[player[currentPlayer].currentShot].missile.live == 0)
-            && (player[currentPlayer].didShoot)
-            )
-         || (  (player[currentPlayer].energy < player[currentPlayer].velocity)
-            && (conf.energy)
-            && (!player[currentPlayer].didShoot)
-            && (player[currentPlayer].valid)
-            )
-         )
-      || (  (player[currentPlayer].timeout == 0)
-         && (conf.timeout)
-         )
-      || (player[currentPlayer].watch)
-      )
+   int pl;
+   for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
-      if (  (player[currentPlayer].timeout == 0)
-         && (!player[currentPlayer].watch)
-         )
-      {
-         player[currentPlayer].timeoutcnt++;
-      }
-      if(conf.debug) printf("stepSimulation: %s:%d call nextPlayer\n",__FILE__,__LINE__);
-      nextPlayer();
-   }
+      SimPlayer* p = &(player[pl]);
 
-   if (  (player[currentPlayer].active)
-      && (player[currentPlayer].valid)
-      && (!player[currentPlayer].didShoot)
-      && (  (player[currentPlayer].energy >= player[currentPlayer].velocity)
-         || (!conf.energy)
+      if (  (conf.debug)
+         && (  (pl == currentPlayer)
+            || (conf.realtime)
+            )
          )
-      )
-   {
-      player[currentPlayer].currentShot = (player[currentPlayer].currentShot + 1) % conf.numShots;
-      initShot(currentPlayer);
-      player[currentPlayer].valid = 0;
-      if(!conf.energy)
       {
-         player[currentPlayer].velocity = 10.0;
-         player[currentPlayer].oldVelocity = 10.0;
+         printf("stepSimulation: %s:%d player=%d player.energy=%.4f player.velocity=%.4f\n", __FILE__, __LINE__, pl, p->energy, p->velocity);
       }
-      player[currentPlayer].didShoot = 1;
+
+      if (  (!conf.realtime)
+         && (pl == currentPlayer)
+         && (  (  (  (p->active)
+                  && (p->shot[p->currentShot].missile.live == 0)
+                  && (p->didShoot)
+                  )
+               || (  (p->energy < p->velocity)
+                  && (conf.energy)
+                  && (!p->didShoot)
+                  && (p->valid)
+                  )
+               )
+            || (  (p->timeout == 0)
+               && (conf.timeout)
+               )
+            || (p->watch)
+            )
+         )
+      {
+         if (  (p->timeout == 0)
+            && (!p->watch)
+            )
+         {
+            p->timeoutcnt++;
+         }
+         if(conf.debug) printf("stepSimulation: %s:%d call nextPlayer\n",__FILE__,__LINE__);
+         nextPlayer();
+      }
+
+      if (  (  (conf.realtime)
+            || (pl == currentPlayer)
+            )
+         && (p->active)
+         && (p->valid)
+         && (!p->didShoot)
+         && (  (p->energy >= p->velocity)
+            || (!conf.energy)
+            )
+         )
+      {
+         p->currentShot = (p->currentShot + 1) % conf.numShots;
+         initShot(pl);
+         p->valid = 0;
+         if(!conf.energy)
+         {
+            p->velocity = 10.0;
+            p->oldVelocity = 10.0;
+         }
+         if(!conf.realtime)
+         {
+            p->didShoot = 1;
+         }
+      }
+      if(conf.realtime)
+      {
+         p->energy += 10.0 / 10.0 / 60.0;
+      }
    }
    simulate();
    killflash *= 0.95;
@@ -386,13 +413,12 @@ void playerJoin(int p)
 void playerLeave(int p)
 {
    player[p].active = 0;
-   if(p == currentPlayer)
+   if(!conf.realtime && p == currentPlayer)
    {
       nextPlayer();
    }
    for(p = 0; p < conf.maxPlayers; ++p)
    {
-      if(!conf.energy) player[p].velocity = 10.0;
       killflash = 1.0;
    }
 }

@@ -141,7 +141,7 @@ static void drawPlayers(int offset, int activeP)
       x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
       y = (1 + offset) * 24.0;
       if (p / 6) y = uiH - 3.0;
-      sprintf(buffer, "%s%s (%d:%d)%s", p == getCurrentPlayer() ? "> " : "  ", pl->name, pl->kills, pl->deaths, p == getCurrentPlayer() ? " <" : "");
+      sprintf(buffer, "%s%s (%d:%d)%s", (!conf.realtime && p == getCurrentPlayer()) ? "> " : "  ", pl->name, pl->kills, pl->deaths, (!conf.realtime && p == getCurrentPlayer()) ? " <" : "");
       drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
 
       if(conf.timeout && activeP > 1)
@@ -234,7 +234,7 @@ static void draw(void)
       glVertexPointer(2, GL_FLOAT, 0, vertCircle);
       glDrawArrays(GL_LINE_LOOP, 0, 16);
       glDrawArrays(GL_LINES, 16, 16);
-      if(p == getCurrentPlayer() && actp > 1)
+      if(!conf.realtime && p == getCurrentPlayer() && actp > 1)
       {
          glScalef(4.0, 4.0, 1.0);
          glDrawArrays(GL_LINE_LOOP, 0, 16);

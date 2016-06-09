@@ -25,7 +25,7 @@ void help(void)
    printf(" ratio         aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats), default: 16:9\n");
    printf(" ip            if set and a free slot exists, display 'to play, telnet \"ip\" 4390', default: empty\n");
    printf(" energy        limit available energy (default: 1)\n");
-   //printf(" realtime      realtime mode (implies energy, default: 1)\n");
+   printf(" realtime      realtime mode (implies energy, default: 1)\n");
    printf(" playersize    radius of players (default: 4.0)\n");
    printf("\n");
    printf("Margins around the battlefield before shots are voided (default: 500.0)\n");
@@ -57,6 +57,7 @@ void config(int* argc, char** argv)
    conf.timeout = 30 * 60;
    conf.ip = 0;
    conf.energy = 1;
+   conf.realtime = 1;
 
    conf.throttle = 0;
    conf.debug = 0;
@@ -216,6 +217,15 @@ void config(int* argc, char** argv)
             exit(0);
          }
       }
+      else if (strcmp(b, "realtime") == 0)
+      {
+         conf.realtime = atoi(c);
+         if(conf.realtime > 1 || conf.realtime < 0)
+         {
+            printf("realtime needs to be 0 or 1\n");
+            exit(0);
+         }
+      }
       else if (strcmp(b, "playersize") == 0)
       {
          conf.playerSize = atof(c);
@@ -282,5 +292,10 @@ void config(int* argc, char** argv)
       {
          printf("warning: nw ignored parameter %s %s\n", b, c);
       }
+   }
+   if (conf.realtime)
+   {
+      conf.energy = 1;
+      conf.timeout = 0;
    }
 }
