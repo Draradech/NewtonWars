@@ -11,6 +11,10 @@ The game is best played in "party mode" with the display on a TV or projector an
 Milestones
 ==========
 
+2016-06-09
+----------
+Realtime mode - all players can shoot simultaneously (and have multiple shots at a time), energy is added based on time
+
 2016-05-20
 ----------
 Energy mode - shots now cost energy based on their velocity, energy is added per round
