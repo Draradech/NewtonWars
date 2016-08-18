@@ -4,13 +4,13 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <limits.h>
 #include <string.h>
 #include <sys/types.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <limits.h>
 #else
 #include <unistd.h>
 #include <sys/socket.h>
