@@ -48,6 +48,7 @@ typedef struct
    int echo;
    int bot;
    int local;
+   int limit;
 } connection_t;
 
 typedef struct
@@ -151,6 +152,27 @@ static void update_block_list()
          if(block_list[i].time == 0)
          {
             block_list[i].ip[0] = '\0';
+         }
+      }
+   }
+}
+
+static void update_limits()
+{
+   static int counter;
+   int k;
+
+   counter++;
+   if(counter % 10 != 0) return;
+
+   for(k = 0; k < conf.maxPlayers; ++k)
+   {
+      if(connection[k].socket)
+      {
+         connection[k].limit += 1;
+         if(connection[k].limit > 1024)
+         {
+            connection[k].limit = 1024;
          }
       }
    }
@@ -385,6 +407,7 @@ void stepNetwork(void)
    }
 
    update_block_list();
+   update_limits();
 
    tv.tv_sec = 0;
    tv.tv_usec = 1;
@@ -428,6 +451,7 @@ void stepNetwork(void)
                                               || (strcmp(remoteIP,"::ffff:127.0.0.1") == 0)
                                               || (strcmp(remoteIP,"::1") == 0)
                                               );
+                        connection[k].limit = 1024;
                         playerJoin(k);
                         updateName(k, "Anonymous");
                         allSendPlayerPos(k);
@@ -451,9 +475,26 @@ void stepNetwork(void)
          }
          else
          {
-            if((nbytes = recv(i, buf, sizeof buf, 0)) <= 0)
+            pi = -1;
+            for(k = 0; k < conf.maxPlayers; ++k)
             {
-               if(nbytes == 0)
+               if(connection[k].socket == i)
+               {
+                  pi = k;
+                  break;
+               }
+            }
+            nbytes = recv(i, buf, sizeof buf, 0);
+            connection[pi].limit -= nbytes;
+            if (  (nbytes <= 0)
+               || (connection[pi].limit < 0)
+               )
+            {
+               if(connection[pi].limit < 0)
+               {
+                  printf("socket %d exceeded rate limit\n", i);
+               }
+               else if(nbytes == 0)
                {
                   printf("socket %d hung up\n", i);
                }
@@ -461,29 +502,13 @@ void stepNetwork(void)
                {
                   print_error("recv");
                }
-               for(k = 0; k < conf.maxPlayers; ++k)
-               {
-                  if(connection[k].socket == i)
-                  {
-                     disconnectPlayer(k);
-                     allSendPlayerLeave(k);
-                     break;
-                  }
-               }   
+               disconnectPlayer(pi);
+               allSendPlayerLeave(pi);
                close(i);
                FD_CLR(i, &master);
             }
             else
             {
-               pi = -1;
-               for(k = 0; k < conf.maxPlayers; ++k)
-               {
-                  if(connection[k].socket == i)
-                  {
-                     pi = k;
-                     break;
-                  }
-               }   
                for(k = 0; k < nbytes && pi >= 0; ++k)
                {
                   unsigned char c = buf[k];
