@@ -50,12 +50,19 @@ typedef struct
    int local;
 } connection_t;
 
-fd_set master, readfds;
-int fdmax, listener;
-char buf[128];
-char sendbuf[128];
-uint32_t binsend[5000];
-connection_t* connection;
+typedef struct
+{
+   char ip[INET6_ADDRSTRLEN];
+   int time;
+} block_entry_t;
+
+static fd_set master, readfds;
+static int fdmax, listener;
+static char buf[128];
+static char sendbuf[128];
+static uint32_t binsend[5000];
+static block_entry_t block_list[16];
+static connection_t* connection;
 
 static void print_error(const char* msg)
 {
@@ -104,6 +111,48 @@ static void snd_l(int socket, int len, uint32_t* msg)
    if(send(socket, (char*)msg, sizeof(uint32_t) * len, flags) == -1)
    {
       print_error("send");
+   }
+}
+
+static int is_blocked(char* ip)
+{
+   int entry_min_time = -1;
+   int min_time = INT_MAX;
+   int i;
+
+   for(i = 0; i < 16; ++i)
+   {
+      if(strcmp(ip, block_list[i].ip) == 0)
+      {
+         int time = block_list[i].time;
+         block_list[i].time = 600;
+         return time;
+      }
+      if(block_list[i].time < min_time)
+      {
+         min_time = block_list[i].time;
+         entry_min_time = i;
+      }
+   }
+   strncpy(block_list[entry_min_time].ip, ip, INET6_ADDRSTRLEN);
+   block_list[entry_min_time].time = 600;
+   return 0;
+}
+
+static void update_block_list()
+{
+   int i;
+
+   for(i = 0; i < 16; ++i)
+   {
+      if(block_list[i].time)
+      {
+         block_list[i].time--;
+         if(block_list[i].time == 0)
+         {
+            block_list[i].ip[0] = '\0';
+         }
+      }
    }
 }
 
@@ -334,7 +383,9 @@ void stepNetwork(void)
          }
       }
    }
-   
+
+   update_block_list();
+
    tv.tv_sec = 0;
    tv.tv_usec = 1;
    readfds = master;
@@ -358,36 +409,43 @@ void stepNetwork(void)
             }
             else
             {
+               int blocked;
                getnameinfo((struct sockaddr *)&remoteaddr, addrlen, remoteIP, sizeof remoteIP, NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV);
-               for(k = 0; k < conf.maxPlayers; ++k)
-               {
-                  if(connection[k].socket == 0)
-                  {
-                     connection[k].socket = newfd;
-                     connection[k].local = (  (strcmp(remoteIP,"127.0.0.1") == 0)
-                                           || (strcmp(remoteIP,"::ffff:127.0.0.1") == 0)
-                                           || (strcmp(remoteIP,"::1") == 0)
-                                           );
-                     playerJoin(k);
-                     updateName(k, "Anonymous");
-                     allSendPlayerPos(k);
-                     break;
-                  }
-               }
-               if(k == conf.maxPlayers)
+               blocked = is_blocked(remoteIP);
+               if(blocked)
                {
                   close(newfd);
-                  printf("new connection from %s on socket %d refused: max connections\n", remoteIP, newfd);
+                  printf("new connection from %s on socket %d refused: blocked for %lfs\n", remoteIP, newfd, blocked / 60.0f);
                }
                else
                {
-                  FD_SET(newfd, &master);
-                  if(newfd > fdmax)
+                  for(k = 0; k < conf.maxPlayers; ++k)
                   {
-                     fdmax = newfd;
+                     if(connection[k].socket == 0)
+                     {
+                        connection[k].socket = newfd;
+                        connection[k].local = (  (strcmp(remoteIP,"127.0.0.1") == 0)
+                                              || (strcmp(remoteIP,"::ffff:127.0.0.1") == 0)
+                                              || (strcmp(remoteIP,"::1") == 0)
+                                              );
+                        playerJoin(k);
+                        updateName(k, "Anonymous");
+                        allSendPlayerPos(k);
+                        FD_SET(newfd, &master);
+                        if(newfd > fdmax)
+                        {
+                           fdmax = newfd;
+                        }
+                        printf("new connection from %s on socket %d accepted\n", remoteIP, newfd);
+                        snd(newfd, WELCOME);
+                        break;
+                     }
                   }
-                  printf("new connection from %s on socket %d accepted\n", remoteIP, newfd);
-                  snd(newfd, WELCOME);
+                  if(k == conf.maxPlayers)
+                  {
+                     close(newfd);
+                     printf("new connection from %s on socket %d refused: max connections\n", remoteIP, newfd);
+                  }
                }
             }
          }
