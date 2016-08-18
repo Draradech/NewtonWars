@@ -194,6 +194,9 @@ static void initShot(int pl)
    s->dot[0] = d2f(m->position);
    s->length = 1;
    s->player = pl;
+   s->angle = p->angle;
+   s->velocity = p->velocity;
+   allSendShotBegin(s);
 }
 
 static void simulate(void)

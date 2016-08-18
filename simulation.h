@@ -17,6 +17,8 @@ typedef struct
    SimMissile missile;
    int length;
    int player;
+   double angle;
+   double velocity;
 } SimShot;
 
 typedef struct

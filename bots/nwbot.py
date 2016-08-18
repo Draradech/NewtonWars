@@ -31,7 +31,7 @@ def recvall(sock, count):
 
 if __name__ == "__main__":
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect(("127.0.0.1", 3490))
+    s.connect(("192.168.2.123", 3490))
 
     s.send(bytes("n Stupobot\n", 'UTF-8'))
     readall(s)

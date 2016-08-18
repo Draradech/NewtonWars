@@ -163,16 +163,16 @@ static void update_limits()
    int k;
 
    counter++;
-   if(counter % 10 != 0) return;
+   if(counter % 3 != 0) return;
 
    for(k = 0; k < conf.maxPlayers; ++k)
    {
       if(connection[k].socket)
       {
          connection[k].limit += 1;
-         if(connection[k].limit > 1024)
+         if(connection[k].limit > 512)
          {
-            connection[k].limit = 1024;
+            connection[k].limit = 512;
          }
       }
    }
@@ -349,6 +349,50 @@ void sendShotFinished(int i, SimShot* s)
    snd_l(i, 3 + s->length * 2, binsend);
 }
 
+void sendShotBegin(int i, SimShot* s)
+{
+   double tmp;
+   binsend[0] = MSG_SHOTBEGIN;
+   binsend[1] = s->player;
+   tmp = s->angle;
+   memcpy(&binsend[2], &tmp, sizeof(double));
+   tmp = s->velocity;
+   memcpy(&binsend[4], &tmp, sizeof(double));
+   snd_l(i, 6, binsend);
+}
+
+void sendShotFin(int i, SimShot* s)
+{
+   double tmp;
+   binsend[0] = MSG_SHOTFIN;
+   binsend[1] = s->player;
+   tmp = s->angle;
+   memcpy(&binsend[2], &tmp, sizeof(double));
+   tmp = s->velocity;
+   memcpy(&binsend[4], &tmp, sizeof(double));
+   binsend[6] = s->length;
+   memcpy(&binsend[7], s->dot, s->length * 2 * sizeof(float));
+   snd_l(i, 7 + s->length * 2, binsend);
+}
+
+void sendOwnEnergy(int i, int p)
+{
+   double tmp;
+   binsend[0] = MSG_OWN_ENERGY;
+   binsend[1] = p;
+   tmp = getPlayer(p)->energy;
+   memcpy(&binsend[2], &tmp, sizeof(double));
+   snd_l(i, 4, binsend);
+}
+
+void sendGameMode(int i, int p)
+{
+   binsend[0] = MSG_GAMEMODE;
+   binsend[1] = p;
+   binsend[2] = conf.realtime ? MODE_REALTIME : (conf.energy ? MODE_ENERGY : MODE_CLASSIC);
+   snd_l(i, 3, binsend);
+}
+
 void allSendPlayerLeave(int p)
 {
    int k;
@@ -380,7 +424,29 @@ void allSendShotFinished(SimShot* s)
    {
       if(connection[k].socket && connection[k].bot)
       {
-         sendShotFinished(connection[k].socket, s);
+         if(connection[k].bot >= MSG_SHOTFIN)
+         {
+            sendShotFin(connection[k].socket, s);
+         }
+         else
+         {
+            sendShotFinished(connection[k].socket, s);
+         }
+      }
+   }   
+}
+
+void allSendShotBegin(SimShot* s)
+{
+   int k;
+   for(k = 0; k < conf.maxPlayers; ++k)
+   {
+      if(connection[k].socket && connection[k].bot)
+      {
+         if(connection[k].bot >= MSG_SHOTBEGIN)
+         {
+            sendShotBegin(connection[k].socket, s);
+         }
       }
    }   
 }
@@ -451,7 +517,7 @@ void stepNetwork(void)
                                               || (strcmp(remoteIP,"::ffff:127.0.0.1") == 0)
                                               || (strcmp(remoteIP,"::1") == 0)
                                               );
-                        connection[k].limit = 1024;
+                        connection[k].limit = 512;
                         playerJoin(k);
                         updateName(k, "Anonymous");
                         allSendPlayerPos(k);
@@ -596,9 +662,21 @@ void stepNetwork(void)
                         }
                         case 'b':
                         {
-                           connection[pi].bot = !connection[pi].bot;
                            if(connection[pi].bot)
                            {
+                              connection[pi].bot = 0;
+                           }
+                           else
+                           {
+                              connection[pi].bot = atoi(connection[pi].msgbuf + 2);
+                              if(connection[pi].bot == 0)
+                              {
+                                 connection[pi].bot = 4;
+                              }
+                              if(connection[pi].bot >= MSG_GAMEMODE)
+                              {
+                                 sendGameMode(i, pi);
+                              }
                               sendOwnId(i, pi);
                               for(pi2 = 0; pi2 < conf.maxPlayers; ++pi2)
                               {
@@ -648,6 +726,14 @@ void stepNetwork(void)
                         case 'r':
                         {
                            validateOld(pi);
+                           break;
+                        }
+                        case 'u':
+                        {
+                           if(connection[pi].bot >= MSG_OWN_ENERGY)
+                           {
+                              sendOwnEnergy(i, pi);
+                           }
                            break;
                         }
                         default:
