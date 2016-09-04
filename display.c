@@ -200,13 +200,17 @@ static void draw(void)
 
    for(p = 0; p < conf.maxPlayers; ++p)
    {
-      SimPlayer* pl = getPlayer(p);
-      if(!pl->active) continue;
       uiPlayer[p].fadeout = LIMIT(uiPlayer[p].fadeout - 0.02, 0.0, 1.0);
-      for(s = conf.numShots - 1; s >= 0; --s)
+   }
+
+   for(s = conf.numShots - 1; s >= 0; --s)
+   {
+      for(p = 0; p < conf.maxPlayers; ++p)
       {
+         SimPlayer* pl = getPlayer(p);
          double bright;
          SimShot* shot;
+         if(!pl->active) continue;
          shot = getShot(p, s);
          if(shot->missile.live && shot->length < 4)
          {
@@ -227,6 +231,11 @@ static void draw(void)
             glDrawArrays(GL_LINE_STRIP, 0, 3);
          }
       }
+   }
+
+   for(p = 0; p < conf.maxPlayers; ++p)
+   {
+      SimPlayer* pl = getPlayer(p);
       glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, 1.0f);
       glPushMatrix();
       glTranslatef(pl->position.x, pl->position.y, 0);
