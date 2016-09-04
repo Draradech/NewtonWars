@@ -236,6 +236,7 @@ static void draw(void)
    for(p = 0; p < conf.maxPlayers; ++p)
    {
       SimPlayer* pl = getPlayer(p);
+      if(!pl->active) continue;
       glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, 1.0f);
       glPushMatrix();
       glTranslatef(pl->position.x, pl->position.y, 0);
