@@ -124,7 +124,7 @@ static void drawFps(int offset)
    }
 
    sprintf(buffer, "%.1lf fps", dfps);
-   drawString(buffer, 3.0, (2 + offset) * 24.0, 1.0, 1.0, 1.0);
+   drawString(buffer, 3.0, (3 + offset) * 24.0, 1.0, 1.0, 1.0);
 }
 
 static void drawPlayers(int offset, int activeP)
