@@ -187,7 +187,15 @@ static void draw(void)
 
    for(p = 0; p < conf.maxPlayers; ++p)
    {
+      SimShot* shot;
+      SimPlayer* pl = getPlayer(p);
+      if(!pl->active) continue;
+      shot = getShot(p, 0);
       uiPlayer[p].fadeout = LIMIT(uiPlayer[p].fadeout - 0.02, 0.0, 1.0);
+      if(shot->missile.live && shot->length < 4)
+      {
+         uiPlayer[p].fadeout = 1.0;
+      }
    }
 
    for(s = conf.numShots - 1; s >= 0; --s)
@@ -199,10 +207,6 @@ static void draw(void)
          SimShot* shot;
          if(!pl->active) continue;
          shot = getShot(p, s);
-         if(shot->missile.live && shot->length < 4)
-         {
-            uiPlayer[p].fadeout = 1.0;
-         }
          bright = (double)(conf.numShots - s - 1) / (conf.numShots - 1);
          if(s > 0)
          {
