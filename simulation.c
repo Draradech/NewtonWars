@@ -54,10 +54,10 @@ static void initPlayer(int p, int clear)
       player[p].kills = 0;
       player[p].shots = 0;
       player[p].watch = 0;
+      player[p].currentShot = 0;
    }
 
    player[p].active = 1;
-   player[p].currentShot = 0;
    player[p].valid = 0;
    player[p].didShoot = 0;
    player[p].timeout = conf.timeout;
@@ -66,8 +66,14 @@ static void initPlayer(int p, int clear)
    for(i = 0; i < conf.numShots; ++i)
    {
       SimShot* s = &(player[p].shot[i]);
-      s->length = 0;
-      s->missile.live = 0;
+      if(! s->missile.live)
+      {
+         s->length = 0;
+      }
+      else
+      {
+         s->missile.stale = 1;
+      }
    }
 
    tries = 0;
@@ -137,6 +143,10 @@ static void missileEnd(SimShot* s)
    s->missile.live = 0;
    s->dot[s->length++] = d2f(s->missile.position);
    allSendShotFinished(s);
+   if(s->missile.stale)
+   {
+      s->length = 0;
+   }
 }
 
 static void planetHit(SimShot* s)
@@ -191,6 +201,7 @@ static void initShot(int pl)
    m->speed.y = p->velocity * -sin(p->angle / 180.0 * M_PI);
    m->live = 1;
    m->leftSource = 0;
+   m->stale = 0;
    s->dot[0] = d2f(m->position);
    s->length = 1;
    s->player = pl;

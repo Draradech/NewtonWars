@@ -9,6 +9,7 @@ typedef struct
    Vec2d speed;
    int live;
    int leftSource;
+   int stale;
 } SimMissile;
 
 typedef struct
