@@ -185,19 +185,6 @@ static void draw(void)
    glScalef(zoom, zoom, zoom);
    glTranslatef(-conf.battlefieldW / 2, -conf.battlefieldH / 2, 0);
 
-   glColor4f(0.3, 0.3, 0.3, 1.0);
-   for(i = 0; i < conf.numPlanets; ++i)
-   {
-      SimPlanet* p = getPlanet(i);
-      glPushMatrix();
-      glTranslatef(p->position.x, p->position.y, 0);
-      glScalef(p->radius, p->radius, 1.0);
-      glVertexPointer(2, GL_FLOAT, 0, vertCircle);
-      glDrawArrays(GL_LINE_LOOP, 0, 16);
-      glDrawArrays(GL_LINES, 16, 16);
-      glPopMatrix();
-   }
-
    for(p = 0; p < conf.maxPlayers; ++p)
    {
       uiPlayer[p].fadeout = LIMIT(uiPlayer[p].fadeout - 0.02, 0.0, 1.0);
@@ -249,6 +236,19 @@ static void draw(void)
          glScalef(4.0, 4.0, 1.0);
          glDrawArrays(GL_LINE_LOOP, 0, 16);
       }
+      glPopMatrix();
+   }
+
+   glColor4f(0.3, 0.3, 0.3, 1.0);
+   for(i = 0; i < conf.numPlanets; ++i)
+   {
+      SimPlanet* p = getPlanet(i);
+      glPushMatrix();
+      glTranslatef(p->position.x, p->position.y, 0);
+      glScalef(p->radius, p->radius, 1.0);
+      glVertexPointer(2, GL_FLOAT, 0, vertCircle);
+      glDrawArrays(GL_LINE_LOOP, 0, 16);
+      glDrawArrays(GL_LINES, 16, 16);
       glPopMatrix();
    }
 
