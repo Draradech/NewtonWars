@@ -25,6 +25,8 @@ typedef struct
    double battlefieldH;
    int throttle;
    char* ip;
+   int pot;
+   int area;
 } Config;
 
 extern Config conf;

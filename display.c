@@ -242,6 +242,41 @@ static void draw(void)
       glPopMatrix();
    }
 
+   if(conf.area)
+   {
+      Vec2d p;
+
+      for(p.x = 0; p.x < conf.battlefieldW; p.x += conf.battlefieldW / 120)
+      {
+         for(p.y = 0; p.y < conf.battlefieldH; p.y += conf.battlefieldH / 80)
+         {
+            double pot = getGPotential(p);
+            if (pot > getPmin() && pot < getPmax())
+            {
+               drawString("0", p.x - 7.0, p.y + 12.0, 0.1, 0.2, 0.1);
+            }
+         }
+      }
+   }
+
+   if(conf.pot)
+   {
+      Vec2d p;
+      char buffer[5];
+      for(p.x = 0; p.x < conf.battlefieldW; p.x += conf.battlefieldW / 30)
+      {
+         for(p.y = 0; p.y < conf.battlefieldH; p.y += conf.battlefieldH / 40)
+         {
+            double pot = 100.0 * getGPotential(p);
+            if (pot > 0.1)
+            {
+               sprintf(buffer, "%3.lf", pot);
+               drawString(buffer, p.x - 21.0, p.y + 12.0, 0.5, 0.5, 0.5);
+            }
+         }
+      }
+   }
+
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
 

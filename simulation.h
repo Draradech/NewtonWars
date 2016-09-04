@@ -71,4 +71,8 @@ int getDeathMessage(char* buf);
 void initSimulation(void);
 void stepSimulation(void);
 
+double getGPotential(Vec2d pos);
+double getPmin();
+double getPmax();
+
 #endif /* _SIMULATION_H_ */

@@ -618,6 +618,22 @@ void stepNetwork(void)
                            }
                           break;
                         }
+                        case 'a':
+                        {
+                           if(connection[pi].local)
+                           {
+                              conf.area = !conf.area;
+                           }
+                          break;
+                        }
+                        case 'p':
+                        {
+                           if(connection[pi].local)
+                           {
+                              conf.pot = !conf.pot;
+                           }
+                          break;
+                        }
                         case 'v':
                         {
                            updateVelocity(pi, atof(connection[pi].msgbuf + 2));

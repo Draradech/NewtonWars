@@ -14,6 +14,7 @@ static SimPlayer* player;
 static int currentPlayer;
 static char deathMessage[128];
 static double killflash;
+static double pmin, pmax;
 
 static void initPlanets(void)
 {
@@ -37,6 +38,28 @@ static void initPlanets(void)
             }
          }
       } while (nok);
+   }
+
+   {
+      Vec2d p;
+      double sum = 0;
+      int num = 0;
+
+      for(p.x = 0; p.x < conf.battlefieldW; p.x += conf.battlefieldW / 120)
+      {
+         for(p.y = 0; p.y < conf.battlefieldH; p.y += conf.battlefieldH / 80)
+         {
+            double pot = getGPotential(p);
+            if (pot > 0.1)
+            {
+               sum += pot;
+               num++;
+            }
+         }
+      }
+
+      pmax = sum / num;
+      pmin = pmax / 2;
    }
 }
 
@@ -83,12 +106,9 @@ static void initPlayer(int p, int clear)
       player[p].position.y = 20.0 + (double)rand() / RAND_MAX * (conf.battlefieldH - 40.0);
 
       nok = 0;
-      for(i = 0; i < conf.numPlanets; ++i)
+      if(getGPotential(player[p].position) > pmax || getGPotential(player[p].position) < pmin)
       {
-         if(distance(player[p].position, planet[i].position) <= (100.0 + planet[i].radius + 4.0))
-         {
-            nok = 1;
-         }
+         nok = 1;
       }
       for(i = 0; i < conf.maxPlayers; ++i)
       {
@@ -302,6 +322,33 @@ static void simulate(void)
       }
    }
 }
+
+double getGPotential(Vec2d pos)
+{
+   double l, potential = 0;
+   int j;
+
+   for(j = 0; j < conf.numPlanets; ++j)
+   {
+      Vec2d v;
+      v = vsub(planet[j].position, pos);
+      l = length(v);
+
+      if (l <= planet[j].radius)
+      {
+         return 0;
+      }
+
+      v = vdiv(v, l);
+      v = vmul(v, planet[j].mass / (l * l));
+
+      potential += length(v);
+   }
+   return potential;
+}
+
+double getPmin() { return pmin; }
+double getPmax() { return pmax; }
 
 void initSimulation(void)
 {
