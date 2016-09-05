@@ -25,6 +25,7 @@ typedef struct
    double battlefieldH;
    int throttle;
    char* ip;
+   char* message;
    int pot;
    int area;
 } Config;

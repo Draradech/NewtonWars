@@ -99,9 +99,16 @@ static void drawString(char* str, float x, float y, float r, float g, float b)
 
 static void drawJoin()
 {
-   char buffer[128];
-   sprintf(buffer, "To play, telnet %s 3490", conf.ip);
-   drawString(buffer, 3.0, 24.0, 1.0, 1.0, 1.0);
+   if(conf.message)
+   {
+      drawString(conf.message, 3.0, 24.0, 1.0, 1.0, 1.0);
+   }
+   else if(conf.ip)
+   {
+      char buffer[128];
+      sprintf(buffer, "To play, telnet %s 3490", conf.ip);
+      drawString(buffer, 3.0, 24.0, 1.0, 1.0, 1.0);
+   }
 }
 
 static void drawFps(int offset)
@@ -299,7 +306,7 @@ static void draw(void)
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
 
-   s = ((actp < conf.maxPlayers) && (conf.ip != 0));
+   s = ((actp < conf.maxPlayers) && (conf.ip != 0 || conf.message != 0));
 
    if(s) drawJoin();
    drawPlayers(s, actp);

@@ -8,7 +8,6 @@
 #define A 2e6
 
 Config conf;
-char ip[64];
 
 void help(void)
 {
@@ -24,6 +23,7 @@ void help(void)
    printf(" timeout       timeout in seconds to enter new valid shot, use 0 to disable, default: 30\n");
    printf(" ratio         aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats), default: 16:9\n");
    printf(" ip            if set and a free slot exists, display 'to play, telnet \"ip\" 4390', default: empty\n");
+   printf(" message       if set and a free slot exists, display message, supesedes ip, default: empty\n");
    printf(" energy        limit available energy (default: 1)\n");
    printf(" realtime      realtime mode (implies energy, default: 1)\n");
    printf(" playersize    radius of players (default: 4.0)\n");
@@ -273,11 +273,16 @@ void config(int* argc, char** argv)
       }
       else if (strcmp(b, "ip") == 0)
       {
-         strncpy(ip, c, 63);
-         ip[63] = 0;
-         if(ip[0])
+         if(c[0])
          {
-            conf.ip = ip;
+            conf.ip = c;
+         }
+      }
+      else if (strcmp(b, "message") == 0)
+      {
+         if(c[0])
+         {
+            conf.message = c;
          }
       }
       else if (  (strcmp(b, "h") == 0)
