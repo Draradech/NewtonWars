@@ -45,9 +45,9 @@ static void initPlanets(void)
       double sum = 0;
       int num = 0;
 
-      for(p.x = 0; p.x < conf.battlefieldW; p.x += conf.battlefieldW / 120)
+      for(p.x = -20 * conf.battlefieldW / 120; p.x < 140 * conf.battlefieldW / 120; p.x += conf.battlefieldW / 120)
       {
-         for(p.y = 0; p.y < conf.battlefieldH; p.y += conf.battlefieldH / 80)
+         for(p.y = -20 * conf.battlefieldH / 80; p.y < 100 * conf.battlefieldH / 80; p.y += conf.battlefieldH / 80)
          {
             double pot = getGPotential(p);
             if (pot > 0.1)
@@ -58,8 +58,10 @@ static void initPlanets(void)
          }
       }
 
-      pmax = sum / num;
-      pmin = pmax / 2;
+      pmax = 1.3 * sum / num;
+      pmin = 1.0 * sum / num;
+
+      printf("pmin: %.2lf pmax: %.2lf\n", pmin, pmax);
    }
 }
 
@@ -114,6 +116,13 @@ static void initPlayer(int p, int clear)
       {
          if(i == p || !player[i].active) continue;
          if(distance(player[p].position, player[i].position) <= (200.0 + 4.0 + 4.0))
+         {
+            nok = 1;
+         }
+      }
+      for(i = 0; i < conf.numPlanets; ++i)
+      {
+         if(distance(player[p].position, planet[i].position) <= (planet[i].radius + 4.0))
          {
             nok = 1;
          }
@@ -339,10 +348,7 @@ double getGPotential(Vec2d pos)
          return 0;
       }
 
-      v = vdiv(v, l);
-      v = vmul(v, planet[j].mass / (l * l));
-
-      potential += length(v);
+      potential += planet[j].mass / l;
    }
    return potential;
 }

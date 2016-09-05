@@ -267,9 +267,9 @@ static void draw(void)
    {
       Vec2d p;
 
-      for(p.x = 0; p.x < conf.battlefieldW; p.x += conf.battlefieldW / 120)
+      for(p.x = -20 * conf.battlefieldW / 120; p.x < 140 * conf.battlefieldW / 120; p.x += conf.battlefieldW / 120)
       {
-         for(p.y = 0; p.y < conf.battlefieldH; p.y += conf.battlefieldH / 80)
+         for(p.y = -20 * conf.battlefieldH / 80; p.y < 100 * conf.battlefieldH / 80; p.y += conf.battlefieldH / 80)
          {
             double pot = getGPotential(p);
             if (pot > getPmin() && pot < getPmax())
@@ -284,11 +284,11 @@ static void draw(void)
    {
       Vec2d p;
       char buffer[5];
-      for(p.x = 0; p.x < conf.battlefieldW; p.x += conf.battlefieldW / 30)
+      for(p.x = -5 * conf.battlefieldW / 30; p.x < 35 * conf.battlefieldW / 30; p.x += conf.battlefieldW / 30)
       {
-         for(p.y = 0; p.y < conf.battlefieldH; p.y += conf.battlefieldH / 40)
+         for(p.y = -10 * conf.battlefieldH / 40; p.y < 50 * conf.battlefieldH / 40; p.y += conf.battlefieldH / 40)
          {
-            double pot = 100.0 * getGPotential(p);
+            double pot = getGPotential(p);
             if (pot > 0.1)
             {
                sprintf(buffer, "%3.lf", pot);
