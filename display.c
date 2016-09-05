@@ -141,7 +141,7 @@ static void drawPlayers(int offset, int activeP)
       x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
       y = (1 + offset) * 24.0;
       if (p / 6) y = uiH - 3.0;
-      sprintf(buffer, "%s%s (%d:%d)%s", (!conf.realtime && p == getCurrentPlayer()) ? "> " : "  ", pl->name, pl->kills, pl->deaths, (!conf.realtime && p == getCurrentPlayer()) ? " <" : "");
+      sprintf(buffer, "%s%s (%d:%d)%s", (!conf.realtime && p == getCurrentPlayer()) ? ">" : " ", pl->name, pl->kills, pl->deaths, (!conf.realtime && p == getCurrentPlayer()) ? "<" : "");
       drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
 
       if(conf.timeout && activeP > 1)
@@ -149,7 +149,7 @@ static void drawPlayers(int offset, int activeP)
          x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
          y = (3 + offset) * 24.0;
          if (p / 6) y = uiH - 3.0 - (2 * 24.0);
-         sprintf(buffer, "  %.0lf", pl->timeout / 60.0);
+         sprintf(buffer, " %.0lf", pl->timeout / 60.0);
          drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
       }
       if(conf.energy != 0)
@@ -157,7 +157,7 @@ static void drawPlayers(int offset, int activeP)
          x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
          y = (2 + offset) * 24.0;
          if (p / 6) y = uiH - 3.0 - 24.0;
-         sprintf(buffer, "  E: %.2f", pl->energy);
+         sprintf(buffer, " Energy %.0f", pl->energy);
          drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
       }
    }
@@ -419,7 +419,7 @@ static void initSystem(int* argc, char ** argv)
    else
    {
       glutPositionWindow(0, 0);
-      glutReshapeWindow(800, 600);
+      glutReshapeWindow(1120, 630);
    }
 
    glutDisplayFunc(draw);

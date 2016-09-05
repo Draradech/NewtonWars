@@ -17,7 +17,7 @@ void help(void)
    printf("\n");
    printf("Valid options:\n");
    printf(" players       maximum number of players, default: 12\n");
-   printf(" planets       number of planets, default: 32\n");
+   printf(" planets       number of planets, default: 24\n");
    printf(" shots         number of displayed past shots, default: 16\n");
    printf(" fullscreen    fullscreen enabled, default: 1\n");
    printf(" fastmode      render only every 1000th frame, default: 0\n");
@@ -47,7 +47,7 @@ void config(int* argc, char** argv)
    char *b, *c;
 
    conf.maxPlayers = 12;
-   conf.numPlanets = 32;
+   conf.numPlanets = 24;
    conf.maxSegments = 2000;
    conf.segmentSteps = 50;
    conf.numShots = 16;

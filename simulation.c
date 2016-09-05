@@ -89,7 +89,7 @@ static void initPlayer(int p, int clear)
    for(i = 0; i < conf.numShots; ++i)
    {
       SimShot* s = &(player[p].shot[i]);
-      if(! s->missile.live)
+      if(!s->missile.live)
       {
          s->length = 0;
       }
@@ -198,7 +198,7 @@ static void playerHit(SimShot* s, int p, int p2)
       killflash = 1.0;
    }
    sprintf(deathMessage, "%s killed %s", player[p].name, player[p2].name);
-   nextPlayer(); /* not nice here, think about this more */
+   nextPlayer(); /* not nice here, think about this more (why is this neccessary again?)*/
 }
 
 static void wallHit(SimShot* s)
