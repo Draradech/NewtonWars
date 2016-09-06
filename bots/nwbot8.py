@@ -1,118 +1,188 @@
 #!/usr/bin/env python
-
 import sys
 import socket
 import struct
 import math
 import random
 import time
+import select
+
+
 
 class Network:
+   def __init__(self, bot, name, ip):
+      self.bot = bot
+      self.initMsg()
+      self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+      self.s.connect((ip, 3490))
+      self.send("n %s\n" % name)
+      self.readall()
+      self.send("b 8\n")
+
+   def initMsg(self):
+      self.cntHead = 8
+      self.cntHead2 = -1
+      self.cntBody = -1
+      self.bufHead = b''
+      self.bufHead2 = b''
+      self.bufBody = b''
+      self.msgID = 0
+      self.pid = -1
+
+   def send(self, message):
+      self.s.send(bytes(message, 'UTF-8'))
+
    def readall(self):
-      timeout = self.s.gettimeout()
       self.s.settimeout(1)
       while True:
          try:
-            self.s.recv(4096)
+            self.s.recv(1024)
          except socket.timeout:
             break
-      self.s.settimeout(timeout)
 
-   def recvall(self, count):
-      buf = b''
-      while count:
-         newbuf = self.s.recv(count)
-         if not newbuf: return None
-         buf += newbuf
-         count -= len(newbuf)
-      return buf
+   def shoot(self, a):
+      self.send("%lf\n" % a)
 
-   def __init__(self, cnt):
-      self.cnt = cnt
-      self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      self.s.connect(("127.0.0.1", 3490))
-
-      self.s.send(bytes("n Stupobot 8\n", 'UTF-8'))
-      self.readall()
-      self.s.send(bytes("b 8\n", 'UTF-8'))
-
-      self.s.send(bytes("u\nv %f\n" % self.cnt.speed, 'UTF-8'))
-
-   def step(self, cnt):
-      data = self.recvall(8)
-      typ, pid = struct.unpack("II", data)
-      if typ == 1:
-         self.cnt.mypid = pid
-         print ("My id: %d" % (self.cnt.mypid, ))
-      elif typ == 2:
-         print("Player %d left" % (pid, ))
-      elif typ == 3:
-         data = self.recvall(8)
-         fx, fy = struct.unpack("ff", data)
-         print("Player %d at %f, %f" % (pid, fx, fy))
-      elif typ == 5:
-         data = self.recvall(16)
-         a, v = struct.unpack("dd", data)
-         print("Player %d begun shot (v: %lf, a: %lf)" % (pid, v, a))
-         if pid == self.cnt.mypid:
-            self.cnt.e = self.cnt.e - v
-            self.cnt.angle = a + 370.5 / 5
-            if self.cnt.angle > 360:
-               self.cnt.angle = self.cnt.angle - 360
-            if self.cnt.e >= v:
-               self.s.send(bytes("%f\n" % self.cnt.angle, 'UTF-8'))
-            else:
-               self.s.send(bytes("u\n", 'UTF-8'))
-      elif typ == 6:
-         data = self.recvall(20)
-         a, v, n = struct.unpack("ddI", data)
-         print("Player %d finished shot (v: %lf, a: %lf) with %d segments" % (pid, v, a, n))
-         for i in range(n):
-            data = self.recvall(8)
-            #print("Curve: %r" % (struct.unpack("ff", data), ))
-      elif typ == 7:
-         data = self.recvall(4)
-         m = struct.unpack("I", data)[0]
-         if m != 3:
-            print("Unsupported gamemode %d, expect strangeness" % m)
-      elif typ == 8:
-         data = self.recvall(8)
-         self.cnt.e = struct.unpack("d", data)[0]
-         if self.cnt.e < 50:
-            time.sleep(2)
-            self.s.send(bytes("u\n", 'UTF-8'))
-         else:
-            self.s.send(bytes("%f\n" % self.cnt.angle, 'UTF-8'))
-      else:
-         print("Unexpected data: %r" % (data, ))
-
-         
-class Controller:
-   angle = 0
-   speed = 10
-   mypid = None
-   e = 0
+   def requestEnergy(self):
+      self.send("u\n")
 
    def step(self):
-      self.net.step(self)
+      while self.stepSingle() > 0:
+         pass
 
-   def __init__(self):
-      self.net = Network(self)
+   def stepSingle(self):
+      r, w, x = select.select((self.s, ), (), (), 0)
+      if len(r) == 0:
+         return 0
+      if self.cntHead > 0:
+         data = self.s.recv(self.cntHead)
+         self.cntHead -= len(data)
+         self.bufHead += data
+         if self.cntHead == 0:
+            self.evalHead()
+      elif self.cntHead2 > 0:
+         data = self.s.recv(self.cntHead2)
+         self.cntHead2 -= len(data)
+         self.bufHead2 += data
+         if self.cntHead2 == 0:
+            self.evalHead2()
+      elif self.cntBody > 0:
+         data = self.s.recv(self.cntBody)
+         self.cntBody -= len(data)
+         self.bufBody += data
+         if self.cntBody == 0:
+            self.evalBody()
+      return len(r)
 
-      
+   def evalHead(self):
+      self.msgID, self.pid = struct.unpack('II', self.bufHead)
+      if self.msgID == 1:
+         self.bot.ownId(self.pid)
+         self.initMsg()
+      elif self.msgID == 2:
+         self.bot.playerLeave(self.pid)
+         self.initMsg()
+      elif self.msgID == 3:
+         self.cntBody = 8
+      elif self.msgID == 5:
+         self.cntBody = 16
+      elif self.msgID == 6:
+         self.cntHead2 = 20
+      elif self.msgID == 7:
+         self.cntBody = 4
+      elif self.msgID == 8:
+         self.cntBody = 8
+      else:
+         print("unexpected message id in head: %d" % self.msgID)
+
+   def evalHead2(self):
+      if self.msgID == 6:
+         a, v, n = struct.unpack("ddI", self.bufHead2)
+         self.cntBody = n * 8
+      else:
+         print("unexpected message id in head2: %d" % self.msgID)
+
+   def evalBody(self):
+      if self.msgID == 3:
+         fx, fy = struct.unpack("ff", self.bufBody)
+         self.bot.playerPos(self.pid, fx, fy)
+      elif self.msgID == 5:
+         a, v = struct.unpack("dd", self.bufBody)
+         self.bot.shotBegin(self.pid, a, v)
+      elif self.msgID == 6:
+         a, v, n = struct.unpack("ddI", self.bufHead2)
+         curve = []
+         for i in range(n):
+            curve.append(struct.unpack_from("ff", self.bufBody, 8 * i))
+         self.bot.shotFin(self.pid, a, v, curve)
+      elif self.msgID == 7:
+         m, = struct.unpack("I", self.bufBody)
+         if m != 3:
+            print("unsupported gamemode %d, expect strangeness" % m)
+      elif self.msgID == 8:
+         e, = struct.unpack("d", self.bufBody)
+         self.bot.ownEnergy(e)
+      else:
+         print("unexpected message id in body: %d" % self.msgID)
+      self.initMsg()
+
+
+
+class Stupobot:
+   def __init__(self, ip):
+      self.net = Network(self, "Stupobot 8", ip)
+      self.angle = 0
+      self.mypid = None
+      self.energy = 0
+      self.nextTime = time.time()
+
+   def step(self):
+      self.net.step()
+      t = time.time()
+      if t > self.nextTime:
+         self.net.requestEnergy()
+
+   def ownId(self, pid):
+      self.mypid = pid
+      print ("My id: %d" % self.mypid)
+
+   def playerLeave(self, pid):
+      print("Player %d left" % pid)
+
+   def playerPos(self, pid, fx, fy):
+      print("Player %d at %f, %f" % (pid, fx, fy))
+
+   def shotBegin(self, pid, a, v):
+      print("Player %d begun shot (v: %lf, a: %lf)" % (pid, v, a))
+      if pid == self.mypid:
+         self.energy -= v
+         self.angle = (self.angle + 361 / 5) % 360
+         if self.energy >= v:
+            self.net.shoot(self.angle)
+         else:
+            self.net.requestEnergy()
+
+   def shotFin(self, pid, a, v, curve):
+      print("Player %d finished shot (v: %lf, a: %lf) with %d segments" % (pid, v, a, len(curve)))
+      for fx, fy in curve:
+         pass #print("   Curve: %f, %f" % (fx, fy))
+
+   def ownEnergy(self, e):
+      if e < 50:
+         self.nextTime = time.time() + 50 - e
+      else:
+         self.nextTime += 5 # will be updated when all shots are fired, should never take more than 5s
+         self.energy = e
+         self.net.shoot(self.angle)
+
+
+
 if __name__ == "__main__":
-   cnt = Controller()
+   bot = Stupobot("127.0.0.1")
 
    while True:
-      cnt.step()
-
-
-
-
-
-
-
-
+      bot.step()
+      time.sleep(0.1)
 
 
 
