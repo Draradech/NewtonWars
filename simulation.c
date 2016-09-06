@@ -531,10 +531,7 @@ void playerLeave(int p)
    {
       nextPlayer();
    }
-   for(p = 0; p < conf.maxPlayers; ++p)
-   {
-      killflash = 1.0;
-   }
+   killflash = 1.0;
 }
 
 void updateAngle(int p, double a)
