@@ -22,7 +22,7 @@ void help(void)
    printf(" fastmode      render only every 1000th frame, default: 0\n");
    printf(" timeout       timeout in seconds to enter new valid shot, use 0 to disable, default: 30\n");
    printf(" ratio         aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats), default: 16:9\n");
-   printf(" ip            if set and a free slot exists, display 'to play, telnet \"ip\" 4390', default: empty\n");
+   printf(" ip            if set and a free slot exists, display 'to play, telnet \"ip\" 3490', default: empty\n");
    printf(" message       if set and a free slot exists, display message, supesedes ip, default: empty\n");
    printf(" energy        limit available energy (default: 1)\n");
    printf(" realtime      realtime mode (implies energy, default: 1)\n");
