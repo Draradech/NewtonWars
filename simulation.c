@@ -58,8 +58,8 @@ static void initPlanets(void)
          }
       }
 
-      pmax = 1.3 * sum / num;
-      pmin = 1.0 * sum / num;
+      pmax = 1.1 * sum / num + 20;
+      pmin = 1.1 * sum / num - 20;
 
       printf("pmin: %.2lf pmax: %.2lf\n", pmin, pmax);
    }
