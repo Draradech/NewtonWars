@@ -22,6 +22,7 @@ void initNetwork(void);
 void stepNetwork(void);
 
 void allSendPlayerPos(int p);
+void allSendKillMessage(int p, int p2);
 void allSendShotFinished(SimShot* s);
 void allSendShotBegin(SimShot* s);
 void disconnectPlayer(int p);

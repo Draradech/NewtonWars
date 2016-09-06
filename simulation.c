@@ -12,7 +12,6 @@
 static SimPlanet* planet;
 static SimPlayer* player;
 static int currentPlayer;
-static char deathMessage[128];
 static double killflash;
 static double pmin, pmax;
 
@@ -246,6 +245,7 @@ static void playerHit(SimShot* s, int p, int p2)
    missileEnd(s);
    initPlayer(p2, 0);
    allSendPlayerPos(p2);
+   allSendKillMessage(p, p2);
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
       if(!conf.energy)
@@ -254,7 +254,6 @@ static void playerHit(SimShot* s, int p, int p2)
       }
       killflash = 1.0;
    }
-   sprintf(deathMessage, "%s killed %s", player[p].name, player[p2].name);
    nextPlayer(); /* not nice here, think about this more (why is this neccessary again?)*/
 }
 
@@ -619,17 +618,6 @@ SimPlayer* getPlayer(int p)
 int getCurrentPlayer(void)
 {
    return currentPlayer;
-}
-
-int getDeathMessage(char* buf)
-{
-   if(strlen(deathMessage))
-   {
-      strcpy(buf, deathMessage);
-      deathMessage[0] = 0;
-      return 1;
-   }
-   return 0;
 }
 
 double getFlash(void)

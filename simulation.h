@@ -66,7 +66,6 @@ SimPlanet* getPlanet(int i);
 SimPlayer* getPlayer(int p);
 double getFlash(void);
 int getCurrentPlayer(void);
-int getDeathMessage(char* buf);
 
 void initSimulation(void);
 void stepSimulation(void);

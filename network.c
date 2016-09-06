@@ -451,6 +451,21 @@ void allSendShotBegin(SimShot* s)
    }   
 }
 
+void allSendKillMessage(int p, int p2)
+{
+   int k;
+   sprintf(sendbuf, "%s killed %s", getPlayer(p)->name, getPlayer(p2)->name);
+   for(k = 0; k < conf.maxPlayers; ++k)
+   {
+      if(connection[k].socket && !connection[k].bot)
+      {
+         snd(connection[k].socket, "\r\n");
+         snd(connection[k].socket, sendbuf);
+         snd(connection[k].socket, "\r\n> ");
+      }
+   }
+}
+
 void stepNetwork(void)
 {
    int i, k, pi, pi2, nbytes, newfd;
@@ -458,19 +473,6 @@ void stepNetwork(void)
    struct sockaddr_storage remoteaddr;
    socklen_t addrlen;
    struct timeval tv;
-
-   if(getDeathMessage(sendbuf))
-   {
-      for(k = 0; k < conf.maxPlayers; ++k)
-      {
-         if(connection[k].socket && !connection[k].bot)
-         {
-            snd(connection[k].socket, "\r\n");
-            snd(connection[k].socket, sendbuf);
-            snd(connection[k].socket, "\r\n> ");
-         }
-      }
-   }
 
    update_block_list();
    update_limits();
