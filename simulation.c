@@ -18,51 +18,99 @@ static double pmin, pmax;
 
 static void initPlanets(void)
 {
-   int i, j;
-
-   for(i = 0; i < conf.numPlanets; i++)
+   int tries = 0;
+   do
    {
-      int nok;
-      do
-      {
-         planet[i].radius = 20.0 + (double)rand() / RAND_MAX * 20.0;
-         planet[i].mass = planet[i].radius * planet[i].radius * planet[i].radius / 10.0;
-         planet[i].position.x = planet[i].radius + (double)rand() / RAND_MAX * (conf.battlefieldW - planet[i].radius * 2);
-         planet[i].position.y = planet[i].radius + (double)rand() / RAND_MAX * (conf.battlefieldH - planet[i].radius * 2);
-         nok = 0;
-         for(j = 0; j < i; ++j)
-         {
-            if(distance(planet[i].position, planet[j].position) <= (planet[i].radius + planet[j].radius))
-            {
-               nok = 1;
-            }
-         }
-      } while (nok);
-   }
+      int i, j;
 
-   {
-      Vec2d p;
-      double sum = 0;
-      int num = 0;
-
-      for(p.x = -20 * conf.battlefieldW / 120; p.x < 140 * conf.battlefieldW / 120; p.x += conf.battlefieldW / 120)
+      for(i = 0; i < conf.numPlanets; i++)
       {
-         for(p.y = -20 * conf.battlefieldH / 80; p.y < 100 * conf.battlefieldH / 80; p.y += conf.battlefieldH / 80)
+         int nok;
+         do
          {
-            double pot = getGPotential(p);
-            if (pot > 0.1)
+            planet[i].radius = 20.0 + (double)rand() / RAND_MAX * 20.0;
+            planet[i].mass = planet[i].radius * planet[i].radius * planet[i].radius / 10.0;
+            planet[i].position.x = planet[i].radius + (double)rand() / RAND_MAX * (conf.battlefieldW - planet[i].radius * 2);
+            planet[i].position.y = planet[i].radius + (double)rand() / RAND_MAX * (conf.battlefieldH - planet[i].radius * 2);
+            nok = 0;
+            for(j = 0; j < i; ++j)
             {
-               sum += pot;
-               num++;
+               if(distance(planet[i].position, planet[j].position) <= (planet[i].radius + planet[j].radius))
+               {
+                  nok = 1;
+               }
             }
-         }
+         } while (nok);
       }
 
-      pmax = 1.1 * sum / num + 20;
-      pmin = 1.1 * sum / num - 20;
-
-      printf("pmin: %.2lf pmax: %.2lf\n", pmin, pmax);
+      tries++;
    }
+   while (!potentialEvaluation());
+
+   printf("pmin: %.2lf pmax: %.2lf (%d tries)\n", pmin, pmax, tries);
+}
+
+double potential[160][120];
+char area[160][120];
+
+static void floodfill(i, j)
+{
+   if(!area[i][j] && potential[i][j] > pmin)
+   {
+      area[i][j] = 1;
+      if(i > 0) floodfill(i - 1, j);
+      if(j > 0) floodfill(i, j - 1);
+      if(i < 159) floodfill(i + 1, j);
+      if(j < 119) floodfill(i, j + 1);
+   }
+}
+
+static int potentialEvaluation(void)
+{
+   int i, j, found;
+   Vec2d p;
+   double sum = 0;
+   int num = 0;
+
+   for(i = 0; i < 160; ++i)
+   {
+      p.x = (i - 20.0) * conf.battlefieldW / 120;
+      for(j = 0; j < 120; ++j)
+      {
+         p.y = (j - 20.0) * conf.battlefieldH / 80;
+         potential[i][j] = getGPotential(p);
+         area[i][j] = 0;
+         if (potential[i][j] > 0.1)
+         {
+            sum += potential[i][j];
+            num++;
+         }
+      }
+   }
+
+   pmin = 0.9 * sum / num;
+   pmax = pmin + 40;
+
+   found = 0;
+   for(i = 0; i < 160 && !found; ++i)
+   {
+      for(j = 0; j < 120 && !found; ++j)
+      {
+         if(potential[i][j] > pmin) found = 1;
+      }
+   }
+
+   floodfill(i, j);
+
+   for(i = 0; i < 160; ++i)
+   {
+      for(j = 0; j < 120; ++j)
+      {
+         if(!area[i][j] && potential[i][j] > pmin) return 0;
+      }
+   }
+
+   return 1;
 }
 
 static void initPlayer(int p, int clear)
