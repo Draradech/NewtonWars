@@ -14,41 +14,6 @@ static SimPlayer* player;
 static int currentPlayer;
 static double killflash;
 static double pmin, pmax;
-
-static void initPlanets(void)
-{
-   int tries = 0;
-   do
-   {
-      int i, j;
-
-      for(i = 0; i < conf.numPlanets; i++)
-      {
-         int nok;
-         do
-         {
-            planet[i].radius = 20.0 + (double)rand() / RAND_MAX * 20.0;
-            planet[i].mass = planet[i].radius * planet[i].radius * planet[i].radius / 10.0;
-            planet[i].position.x = planet[i].radius + (double)rand() / RAND_MAX * (conf.battlefieldW - planet[i].radius * 2);
-            planet[i].position.y = planet[i].radius + (double)rand() / RAND_MAX * (conf.battlefieldH - planet[i].radius * 2);
-            nok = 0;
-            for(j = 0; j < i; ++j)
-            {
-               if(distance(planet[i].position, planet[j].position) <= (planet[i].radius + planet[j].radius))
-               {
-                  nok = 1;
-               }
-            }
-         } while (nok);
-      }
-
-      tries++;
-   }
-   while (!potentialEvaluation());
-
-   printf("pmin: %.2lf pmax: %.2lf (%d tries)\n", pmin, pmax, tries);
-}
-
 double potential[160][120];
 char area[160][120];
 
@@ -110,6 +75,40 @@ static int potentialEvaluation(void)
    }
 
    return 1;
+}
+
+static void initPlanets(void)
+{
+   int tries = 0;
+   do
+   {
+      int i, j;
+
+      for(i = 0; i < conf.numPlanets; i++)
+      {
+         int nok;
+         do
+         {
+            planet[i].radius = 20.0 + (double)rand() / RAND_MAX * 20.0;
+            planet[i].mass = planet[i].radius * planet[i].radius * planet[i].radius / 10.0;
+            planet[i].position.x = planet[i].radius + (double)rand() / RAND_MAX * (conf.battlefieldW - planet[i].radius * 2);
+            planet[i].position.y = planet[i].radius + (double)rand() / RAND_MAX * (conf.battlefieldH - planet[i].radius * 2);
+            nok = 0;
+            for(j = 0; j < i; ++j)
+            {
+               if(distance(planet[i].position, planet[j].position) <= (planet[i].radius + planet[j].radius))
+               {
+                  nok = 1;
+               }
+            }
+         } while (nok);
+      }
+
+      tries++;
+   }
+   while (!potentialEvaluation());
+
+   printf("pmin: %.2lf pmax: %.2lf (%d tries)\n", pmin, pmax, tries);
 }
 
 static void initPlayer(int p, int clear)
