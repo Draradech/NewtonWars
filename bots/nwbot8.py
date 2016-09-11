@@ -168,6 +168,7 @@ class Stupobot:
          pass #print("   Curve: %f, %f" % (fx, fy))
 
    def ownEnergy(self, e):
+      print("Own energy: %lf" % e)
       if e < 50:
          self.nextTime = time.time() + 50 - e
       else:
@@ -178,7 +179,7 @@ class Stupobot:
 
 
 if __name__ == "__main__":
-   bot = Stupobot("127.0.0.1")
+   bot = Stupobot("192.168.2.123")
 
    while True:
       bot.step()

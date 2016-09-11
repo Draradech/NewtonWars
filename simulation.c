@@ -137,9 +137,10 @@ static void initPlayer(int p, int clear)
    for(i = 0; i < conf.numShots; ++i)
    {
       SimShot* s = &(player[p].shot[i]);
-      if(!s->missile.live)
+      if(clear || !s->missile.live)
       {
          s->length = 0;
+         s->missile.live = 0;
       }
       else
       {
