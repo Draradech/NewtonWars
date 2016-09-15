@@ -11,6 +11,10 @@ The game is best played in "party mode" with the display on a TV or projector an
 Milestones
 ==========
 
+2016-09-06
+----------
+Fair player placement - calculate gravity potential and place players at compareable potential levels
+
 2016-06-09
 ----------
 Realtime mode - all players can shoot simultaneously (and have multiple shots at a time), energy is added based on time
