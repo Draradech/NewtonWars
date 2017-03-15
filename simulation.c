@@ -17,7 +17,7 @@ static double pmin, pmax;
 double potential[160][120];
 char area[160][120];
 
-static void floodfill(i, j)
+static void floodfill(int i, int j)
 {
    if(!area[i][j] && potential[i][j] > pmin)
    {
