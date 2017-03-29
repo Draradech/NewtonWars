@@ -169,7 +169,7 @@ static void drawPlayers(int offset, int activeP)
          x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
          y = (2 + offset) * 24.0;
          if (p / 6) y = uiH - 3.0 - 24.0;
-         sprintf(buffer, " Energy %.0f", pl->energy);
+         sprintf(buffer, " Energy %d", (int)pl->energy);
          drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
       }
    }

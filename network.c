@@ -762,7 +762,7 @@ void stepNetwork(void)
                            }
                            if(connection[pi].controller)
                            {
-                              sprintf(sendbuf,"%.0lf\n", getPlayer(pi)->energy);
+                              sprintf(sendbuf,"%d\n", (int)getPlayer(pi)->energy);
                               snd(i, sendbuf);
                            }
                            break;
