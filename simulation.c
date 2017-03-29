@@ -535,12 +535,24 @@ void playerLeave(int p)
    killflash = 1.0;
 }
 
-void updateAngle(int p, double a, int checkEnergy)
+void updateAngle(int pl, double a, int checkEnergy)
 {
+   SimPlayer* p = &(player[pl]);
    if(!((a > -720.0) && (a < 720.0))) a = 0.0;
-   //player[p].angle = a;
-   player[p].angle = -a + 90.0; // new angle
-   if(!conf.realtime || !checkEnergy || player[p].energy >= player[p].velocity) player[p].valid = 1;
+   //p->angle = a;
+   p->angle = -a + 90.0; // new angle
+   if(!conf.realtime || !checkEnergy || p->energy >= p->velocity) p->valid = 1;
+
+   if (  (conf.realtime)
+      && (p->active)
+      && (p->valid)
+      && (p->energy >= p->velocity)
+      )
+   {
+      p->currentShot = (p->currentShot + 1) % conf.numShots;
+      initShot(pl);
+      p->valid = 0;
+   }
 }
 
 void validateOld(int p)
