@@ -49,6 +49,7 @@ typedef struct
    int bot;
    int local;
    int limit;
+   int controller;
 } connection_t;
 
 typedef struct
@@ -457,7 +458,7 @@ void allSendKillMessage(int p, int p2)
    sprintf(sendbuf, "%s killed %s", getPlayer(p)->name, getPlayer(p2)->name);
    for(k = 0; k < conf.maxPlayers; ++k)
    {
-      if(connection[k].socket && !connection[k].bot)
+      if(connection[k].socket && !connection[k].bot && !connection[k].controller)
       {
          snd(connection[k].socket, "\r\n");
          snd(connection[k].socket, sendbuf);
@@ -501,8 +502,13 @@ void stepNetwork(void)
             else
             {
                int blocked;
+               int local;
                getnameinfo((struct sockaddr *)&remoteaddr, addrlen, remoteIP, sizeof remoteIP, NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV);
-               blocked = is_blocked(remoteIP);
+               local =   (  (strcmp(remoteIP,"127.0.0.1") == 0)
+                         || (strcmp(remoteIP,"::ffff:127.0.0.1") == 0)
+                         || (strcmp(remoteIP,"::1") == 0)
+                         );
+               blocked = local ? 0 : is_blocked(remoteIP);
                if(blocked)
                {
                   close(newfd);
@@ -515,10 +521,7 @@ void stepNetwork(void)
                      if(connection[k].socket == 0)
                      {
                         connection[k].socket = newfd;
-                        connection[k].local = (  (strcmp(remoteIP,"127.0.0.1") == 0)
-                                              || (strcmp(remoteIP,"::ffff:127.0.0.1") == 0)
-                                              || (strcmp(remoteIP,"::1") == 0)
-                                              );
+                        connection[k].local = local;
                         connection[k].limit = 512;
                         playerJoin(k);
                         updateName(k, "Anonymous");
@@ -553,7 +556,7 @@ void stepNetwork(void)
                }
             }
             nbytes = recv(i, buf, sizeof buf, 0);
-            connection[pi].limit -= nbytes;
+            connection[pi].limit -= connection[pi].local ? 0 : nbytes;
             if (  (nbytes <= 0)
                || (connection[pi].limit < 0)
                )
@@ -706,6 +709,11 @@ void stepNetwork(void)
                            }
                            break;
                         }
+                        case 'd':
+                        {
+                           connection[pi].controller = atoi(connection[pi].msgbuf + 2);
+                           break;
+                        }
                         case 'f':
                         {
                            if(connection[pi].local)
@@ -752,6 +760,21 @@ void stepNetwork(void)
                            {
                               sendOwnEnergy(i, pi);
                            }
+                           if(connection[pi].controller)
+                           {
+                              sprintf(sendbuf,"%.0lf\n", getPlayer(pi)->energy);
+                              snd(i, sendbuf);
+                           }
+                           break;
+                        }
+                        case 'g':
+                        {
+                           if(connection[pi].controller)
+                           {
+                              rgb col = getColor(pi);
+                              sprintf(sendbuf,"%3.0lf %3.0lf %3.0lf\n", col.r * 255, col.g * 255, col.b * 255);
+                              snd(i, sendbuf);
+                           }
                            break;
                         }
                         default:
@@ -761,7 +784,7 @@ void stepNetwork(void)
                         }
                      }
 
-                     if(connection[pi].socket && !connection[pi].bot)
+                     if(connection[pi].socket && !connection[pi].bot && !connection[pi].controller)
                      {
                         snd(i, "> ");
                      }

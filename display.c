@@ -56,6 +56,11 @@ static int screenW, screenH;
 static float uiW, uiH;
 static int fps;
 
+rgb getColor(int player)
+{
+   return uiPlayer[player].color;
+}
+
 static void drawString(char* str, float x, float y, float r, float g, float b)
 {
    const char *p;
