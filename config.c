@@ -26,6 +26,7 @@ void help(void)
    printf(" message       if set and a free slot exists, display message, supesedes ip, default: empty\n");
    printf(" energy        limit available energy (default: 1)\n");
    printf(" realtime      realtime mode (implies energy, default: 1)\n");
+   printf(" rate          energy increase rate (default 1.0 / s)\n");
    printf(" playersize    radius of players (default: 4.0)\n");
    printf("\n");
    printf("Margins around the battlefield before shots are voided (default: 500.0)\n");
@@ -58,6 +59,7 @@ void config(int* argc, char** argv)
    conf.ip = 0;
    conf.energy = 1;
    conf.realtime = 1;
+   conf.rate = 1.0;
 
    conf.throttle = 0;
    conf.debug = 0;
@@ -232,6 +234,15 @@ void config(int* argc, char** argv)
          if(conf.playerSize > 10 || conf.playerSize <= 0)
          {
             printf("playersize needs to be > 0.0 and <= 10.0\n");
+            exit(0);
+         }
+      }
+      else if (strcmp(b, "rate") == 0)
+      {
+         conf.rate = atof(c);
+         if(conf.rate > 10.0 || conf.rate < 0.1)
+         {
+            printf("rate needs to be >= 0.1 and <= 10.0\n");
             exit(0);
          }
       }

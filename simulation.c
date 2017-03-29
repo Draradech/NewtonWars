@@ -497,7 +497,7 @@ void stepSimulation(void)
       }
       if(conf.realtime)
       {
-         p->energy += 10.0 / 10.0 / 60.0;
+         p->energy += conf.rate / 60.0;
       }
    }
    simulate();

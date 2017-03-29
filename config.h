@@ -20,6 +20,7 @@ typedef struct
    double playerSize;
    int energy;
    int realtime;
+   double rate;
    int debug;
    double battlefieldW;
    double battlefieldH;
