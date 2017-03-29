@@ -52,7 +52,7 @@ typedef struct
 
 void playerJoin(int p);
 void playerLeave(int p);
-void updateAngle(int p, double a);
+void updateAngle(int p, double a, int checkEnergy);
 void validateOld(int p);
 void updateVelocity(int p, double v);
 void updateName(int p, char* n);

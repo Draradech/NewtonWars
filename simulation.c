@@ -534,11 +534,12 @@ void playerLeave(int p)
    killflash = 1.0;
 }
 
-void updateAngle(int p, double a)
+void updateAngle(int p, double a, int checkEnergy)
 {
    if(!((a > -720.0) && (a < 720.0))) a = 0.0;
-   player[p].angle = a;
-   player[p].valid = 1;  
+   //player[p].angle = a;
+   player[p].angle = -a + 90.0; // new angle
+   if(!conf.realtime || !checkEnergy || player[p].energy >= player[p].velocity) player[p].valid = 1;
 }
 
 void validateOld(int p)

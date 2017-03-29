@@ -779,7 +779,7 @@ void stepNetwork(void)
                         }
                         default:
                         {
-                           updateAngle(pi, atof(connection[pi].msgbuf));
+                           updateAngle(pi, atof(connection[pi].msgbuf), connection[pi].controller);
                            break;
                         }
                      }
