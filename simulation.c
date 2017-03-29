@@ -118,7 +118,6 @@ static void initPlayer(int p, int clear)
    if(clear)
    {
       player[p].angle = 0.0;
-      player[p].energy = 25.0;
       player[p].velocity = 10.0;
       player[p].oldVelocity = 10.0;
       player[p].deaths = 0;
@@ -128,6 +127,7 @@ static void initPlayer(int p, int clear)
       player[p].currentShot = 0;
    }
 
+   player[p].energy = 20.0;
    player[p].active = 1;
    player[p].valid = 0;
    player[p].didShoot = 0;
@@ -498,6 +498,7 @@ void stepSimulation(void)
       if(conf.realtime)
       {
          p->energy += conf.rate / 60.0;
+         if(p->energy > 200.1) p->energy = 200.1;
       }
    }
    simulate();
