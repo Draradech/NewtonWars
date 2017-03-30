@@ -117,6 +117,15 @@ void config(int* argc, char** argv)
             exit(0);
          }
       }
+      else if (strcmp(b, "limit") == 0)
+      {
+         conf.limit = atof(c);
+         if(conf.limit > 10000.0 || conf.limit < 10.0)
+         {
+            printf("limit needs to be >= 0.0 and <= 10.0\n");
+            exit(0);
+         }
+      }
       else if (strcmp(b, "fullscreen") == 0)
       {
          conf.fullscreen = atoi(c);
