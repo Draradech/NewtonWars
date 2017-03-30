@@ -8,12 +8,9 @@
 
 #define MSG_SHOTBEGIN 5
 #define MSG_SHOTFIN 6 /* deprecates msg 4 */
-#define MSG_GAMEMODE 7
+#define MSG_GAMEMODE 7 /* deprecated */
 #define MSG_OWN_ENERGY 8
 
-
-#define MODE_CLASSIC 1
-#define MODE_ENERGY 2
 #define MODE_REALTIME 3
 
 #include "simulation.h"

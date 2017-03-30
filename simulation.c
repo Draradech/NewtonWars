@@ -9,9 +9,10 @@
 #include "config.h"
 #include "network.h"
 
+#define LIMIT(x, min, max) (((x) < (min)) ? (min) : ((x) > (max)) ? (max) : (x))
+
 static SimPlanet* planet;
 static SimPlayer* player;
-static int currentPlayer;
 static double killflash;
 static double pmin, pmax;
 double potential[160][120];
@@ -119,20 +120,14 @@ static void initPlayer(int p, int clear)
    {
       player[p].angle = 0.0;
       player[p].velocity = 10.0;
-      player[p].oldVelocity = 10.0;
       player[p].deaths = 0;
       player[p].kills = 0;
-      player[p].shots = 0;
-      player[p].watch = 0;
       player[p].currentShot = 0;
    }
 
    player[p].energy = 20.0;
    player[p].active = 1;
    player[p].valid = 0;
-   player[p].didShoot = 0;
-   player[p].timeout = conf.timeout;
-   player[p].timeoutcnt = 0;
 
    for(i = 0; i < conf.numShots; ++i)
    {
@@ -151,8 +146,8 @@ static void initPlayer(int p, int clear)
    tries = 0;
    do
    {
-      player[p].position.x = 20.0 + (double)rand() / RAND_MAX * (conf.battlefieldW - 40.0);
-      player[p].position.y = 20.0 + (double)rand() / RAND_MAX * (conf.battlefieldH - 40.0);
+      player[p].position.x = (double)rand() / RAND_MAX * conf.battlefieldW;
+      player[p].position.y = (double)rand() / RAND_MAX * conf.battlefieldH;
 
       nok = 0;
       if(getGPotential(player[p].position) > pmax || getGPotential(player[p].position) < pmin)
@@ -162,14 +157,14 @@ static void initPlayer(int p, int clear)
       for(i = 0; i < conf.maxPlayers; ++i)
       {
          if(i == p || !player[i].active) continue;
-         if(distance(player[p].position, player[i].position) <= (200.0 + 4.0 + 4.0))
+         if(distance(player[p].position, player[i].position) <= (200.0 + conf.playerSize * 2)) /* player distance from other players */
          {
             nok = 1;
          }
       }
       for(i = 0; i < conf.numPlanets; ++i)
       {
-         if(distance(player[p].position, planet[i].position) <= (planet[i].radius + 4.0))
+         if(distance(player[p].position, planet[i].position) <= (planet[i].radius + conf.playerSize)) /* player distance from planets */
          {
             nok = 1;
          }
@@ -181,7 +176,7 @@ static void initPlayer(int p, int clear)
          {
             for(k = 0; k < player[i].shot[j].length && !nok; ++k)
             {
-               if(distance(player[p].position, f2d(player[i].shot[j].dot[k])) <= 100.0)
+               if(distance(player[p].position, f2d(player[i].shot[j].dot[k])) <= 100.0) /* player distance from existing shots */
                {
                   nok = 1;
                }
@@ -193,24 +188,6 @@ static void initPlayer(int p, int clear)
    if(tries >= 2000)
    {
       printf("Couldn't keep player spawn away from existing shots.\n");
-   }
-}
-
-static void nextPlayer(void)
-{
-   int initial = currentPlayer;
-   if(conf.energy)
-   {
-     player[currentPlayer].energy += 10.0;
-   }
-   do
-   {
-      currentPlayer = (currentPlayer + 1) % conf.maxPlayers;
-   } while (currentPlayer != initial && !player[currentPlayer].active && !player[currentPlayer].watch);
-   player[currentPlayer].didShoot = 0;
-   if(player[currentPlayer].watch)
-   {
-     player[currentPlayer].didShoot = 1;
    }
 }
 
@@ -246,15 +223,7 @@ static void playerHit(SimShot* s, int p, int p2)
    initPlayer(p2, 0);
    allSendPlayerPos(p2);
    allSendKillMessage(p, p2);
-   for(pl = 0; pl < conf.maxPlayers; ++pl)
-   {
-      if(!conf.energy)
-      {
-        player[pl].velocity = 10.0;
-      }
-      killflash = 1.0;
-   }
-   nextPlayer(); /* not nice here, think about this more (why is this neccessary again?)*/
+   killflash = 1.0;
 }
 
 static void wallHit(SimShot* s)
@@ -269,10 +238,7 @@ static void initShot(int pl)
    SimMissile* m = &(s->missile);
 
    m->position = p->position;
-   if(conf.energy)
-   {
-      p->energy -= p->velocity;
-   }
+   p->energy -= p->velocity;
    m->speed.x = p->velocity * cos(p->angle / 180.0 * M_PI);
    m->speed.y = p->velocity * -sin(p->angle / 180.0 * M_PI);
    m->live = 1;
@@ -297,7 +263,6 @@ static void simulate(void)
       for(pl = 0; pl < conf.maxPlayers; ++pl)
       {
          SimPlayer* p = &(player[pl]);
-         if(p->watch) continue;
          if(!p->active) continue;
          for(sh = 0; sh < conf.numShots; ++sh)
          {
@@ -332,11 +297,12 @@ static void simulate(void)
                   && (m->leftSource == 1)
                   )
                {
-                  if(conf.debug) printf("l = %.5f playerSize = %.5f missile.x = %.5f missile.y = %.5f player.x = %5f player.y = %5f\n",l,conf.playerSize,m->position.x,m->position.y,player[pl2].position.x,player[pl2].position.y);
+                  if(conf.debug) printf("l = %.5f playerSize = %.5f missile.x = %.5f missile.y = %.5f player.x = %5f player.y = %5f\n",
+                                         l, conf.playerSize, m->position.x, m->position.y, player[pl2].position.x, player[pl2].position.y);
                   playerHit(s, pl, pl2);
                }
 
-               if (  (l > (conf.playerSize + 1))
+               if (  (l > (conf.playerSize + 1.0))
                   && (pl2 == pl)
                   )
                {
@@ -344,10 +310,10 @@ static void simulate(void)
                }
             }
 
-            if (  (m->position.x < -conf.marginleft)
-               || (m->position.x > conf.battlefieldW + conf.marginright)
-               || (m->position.y < -conf.margintop)
-               || (m->position.y > conf.battlefieldH + conf.marginbottom)
+            if (  (m->position.x < -conf.margin)
+               || (m->position.x > conf.battlefieldW + conf.margin)
+               || (m->position.y < -conf.margin)
+               || (m->position.y > conf.battlefieldH + conf.margin)
                )
             {
                wallHit(s);
@@ -360,15 +326,10 @@ static void simulate(void)
    {
       SimPlayer* p = &(player[pl]);
       if(!p->active) continue;
-      if(p->watch) continue;
-      if(p->timeout) p->timeout--;
-      if(p->valid || actp == 1) p->timeout = conf.timeout;
       for(sh = 0; sh < conf.numShots; ++sh)
       {
          SimShot* s = &(p->shot[sh]);
          if(!s->missile.live) continue;
-         p->timeout = conf.timeout;
-         p->timeoutcnt = 0;
          s->dot[s->length++] = d2f(s->missile.position);
          if(s->length == conf.maxSegments)
          {
@@ -433,73 +394,22 @@ void stepSimulation(void)
    {
       SimPlayer* p = &(player[pl]);
 
-      if (  (conf.debug)
-         && (  (pl == currentPlayer)
-            || (conf.realtime)
-            )
-         )
+      if(conf.debug)
       {
          printf("stepSimulation: %s:%d player=%d player.energy=%.4f player.velocity=%.4f\n", __FILE__, __LINE__, pl, p->energy, p->velocity);
       }
 
-      if (  (!conf.realtime)
-         && (pl == currentPlayer)
-         && (  (  (  (p->active)
-                  && (p->shot[p->currentShot].missile.live == 0)
-                  && (p->didShoot)
-                  )
-               || (  (p->energy < p->velocity)
-                  && (conf.energy)
-                  && (!p->didShoot)
-                  && (p->valid)
-                  )
-               )
-            || (  (p->timeout == 0)
-               && (conf.timeout)
-               )
-            || (p->watch)
-            )
-         )
-      {
-         if (  (p->timeout == 0)
-            && (!p->watch)
-            )
-         {
-            p->timeoutcnt++;
-         }
-         if(conf.debug) printf("stepSimulation: %s:%d call nextPlayer\n",__FILE__,__LINE__);
-         nextPlayer();
-      }
-
-      if (  (  (conf.realtime)
-            || (pl == currentPlayer)
-            )
-         && (p->active)
+      if (  (p->active)
          && (p->valid)
-         && (!p->didShoot)
-         && (  (p->energy >= p->velocity)
-            || (!conf.energy)
-            )
+         && (p->energy >= p->velocity)
          )
       {
          p->currentShot = (p->currentShot + 1) % conf.numShots;
          initShot(pl);
          p->valid = 0;
-         if(!conf.energy)
-         {
-            p->velocity = 10.0;
-            p->oldVelocity = 10.0;
-         }
-         if(!conf.realtime)
-         {
-            p->didShoot = 1;
-         }
       }
-      if(conf.realtime)
-      {
-         p->energy += conf.rate / 60.0;
-         if(p->energy > 200.1) p->energy = 200.1;
-      }
+      p->energy += conf.rate / 60.0;
+      if(p->energy > conf.limit) p->energy = conf.limit;
    }
    simulate();
    killflash *= 0.95;
@@ -509,68 +419,29 @@ void playerJoin(int p)
 {
    int pi;
    initPlayer(p, 1);
-   if(p == 0)
-   {
-      for(pi = 1; pi < conf.maxPlayers; pi++)
-      {
-         if(player[pi].active)
-         {
-            break;
-         }
-      }
-      if(pi == conf.maxPlayers)
-      {
-         currentPlayer = 0;
-      }
-   }
 }
 
 void playerLeave(int p)
 {
    player[p].active = 0;
-   if(!conf.realtime && p == currentPlayer)
-   {
-      nextPlayer();
-   }
    killflash = 1.0;
 }
 
-void updateAngle(int pl, double a, int checkEnergy)
+void updateAngle(int pl, double a, int ce)
 {
    SimPlayer* p = &(player[pl]);
    if(!((a > -720.0) && (a < 720.0))) a = 0.0;
-   //p->angle = a;
-   p->angle = -a + 90.0; // new angle
-   if(!conf.realtime || !checkEnergy || p->energy >= p->velocity) p->valid = 1;
-
-   if (  (conf.realtime)
-      && (p->active)
-      && (p->valid)
-      && (p->energy >= p->velocity)
-      )
+   p->angle = -a + 90.0;
+   if(!ce || p->energy >= p->velocity)
    {
-      p->currentShot = (p->currentShot + 1) % conf.numShots;
-      initShot(pl);
-      p->valid = 0;
+      p->valid = 1;
    }
-}
-
-void validateOld(int p)
-{
-   player[p].valid = 1;  
-   player[p].velocity = player[p].oldVelocity;
-}
-
-void toggleWatch(int p)
-{
-  player[p].watch ^= 1;
 }
 
 void updateVelocity(int p, double v)
 {
-   double limit = conf.energy ? 50.0 : 15.0;
+   double limit = 50.0; /* velocity limit */
    player[p].velocity = LIMIT(v, 0.0, limit);
-   player[p].oldVelocity = LIMIT(v, 0.0, limit);
 }
 
 void tankEnergy(int p)
@@ -624,11 +495,6 @@ SimPlanet* getPlanet(int i)
 SimPlayer* getPlayer(int p)
 {
    return &(player[p]);
-}
-
-int getCurrentPlayer(void)
-{
-   return currentPlayer;
 }
 
 double getFlash(void)
