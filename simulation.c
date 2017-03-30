@@ -230,6 +230,11 @@ static void wallHit(SimShot* s)
    missileEnd(s);
 }
 
+static void lengthLimitHit(SimShot* s)
+{
+   missileEnd(s);
+}
+
 static void initShot(int pl)
 {
    SimPlayer*  p = &(player[pl]);
@@ -330,10 +335,9 @@ static void simulate(void)
          SimShot* s = &(p->shot[sh]);
          if(!s->missile.live) continue;
          s->dot[s->length++] = d2f(s->missile.position);
-         if(s->length == conf.maxSegments)
+         if(s->length == conf.maxSegments - 1)
          {
-            s->missile.live = 0;
-            allSendShotFinished(s);
+            lengthLimitHit(s);
          }
       }
    }
