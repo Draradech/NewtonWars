@@ -209,7 +209,6 @@ static void planetHit(SimShot* s)
 
 static void playerHit(SimShot* s, int p, int p2)
 {
-   int pl;
    if(p == p2)
    {
      player[p].deaths++;
@@ -417,7 +416,6 @@ void stepSimulation(void)
 
 void playerJoin(int p)
 {
-   int pi;
    initPlayer(p, 1);
 }
 
