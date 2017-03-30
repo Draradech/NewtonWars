@@ -390,7 +390,7 @@ void sendGameMode(int i, int p)
 {
    binsend[0] = MSG_GAMEMODE;
    binsend[1] = p;
-   binsend[2] = conf.realtime ? MODE_REALTIME : (conf.energy ? MODE_ENERGY : MODE_CLASSIC);
+   binsend[2] = MODE_REALTIME;
    snd_l(i, 3, binsend);
 }
 
@@ -644,14 +644,6 @@ void stepNetwork(void)
                            updateVelocity(pi, atof(connection[pi].msgbuf + 2));
                            break;
                         }
-                        case 'w':
-                        {
-                           if(connection[pi].local)
-                           {
-                              toggleWatch(pi);
-                           }
-                           break;
-                        }
                         case 'z':
                         {
                            if(connection[pi].local)
@@ -672,7 +664,15 @@ void stepNetwork(void)
                         {
                            if(connection[pi].local)
                            {
-                              conf.debug = atoi(connection[pi].msgbuf + 2);
+                              conf.debug = !conf.debug;
+                           }
+                           break;
+                        }
+                        case 'F':
+                        {
+                           if(connection[pi].local)
+                           {
+                              conf.fastmode = !conf.fastmode;
                            }
                            break;
                         }
@@ -711,7 +711,10 @@ void stepNetwork(void)
                         }
                         case 'd':
                         {
-                           connection[pi].controller = atoi(connection[pi].msgbuf + 2);
+                           if(connection[pi].local)
+                           {
+                              connection[pi].controller = atoi(connection[pi].msgbuf + 2);
+                           }
                            break;
                         }
                         case 'f':
@@ -747,11 +750,6 @@ void stepNetwork(void)
                         {
                            disconnectPlayer(pi);
                            allSendPlayerLeave(pi);
-                           break;
-                        }
-                        case 'r':
-                        {
-                           validateOld(pi);
                            break;
                         }
                         case 'u':
@@ -794,12 +792,4 @@ void stepNetwork(void)
          }
       }
    }
-   for(k = 0; k < conf.maxPlayers; ++k)
-   {
-      if(getPlayer(k)->active && getPlayer(k)->timeoutcnt > 2)
-      {
-         disconnectPlayer(k);
-         allSendPlayerLeave(k);
-     }
-   }   
 }

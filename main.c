@@ -36,7 +36,7 @@ int main(int argc, char** argv)
       if(conf.fastmode)
       {
          i++;
-         i %= 1000;
+         i %= 100;
          if(i != 0) continue;
       }
       stepDisplay();

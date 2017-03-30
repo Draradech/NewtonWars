@@ -30,16 +30,10 @@ typedef struct
    double angle;
    double velocity;
    double energy;
-   double oldVelocity;
-   int watch;
    int deaths;
    int kills;
-   int shots;
    int active;
    int valid;
-   int didShoot;
-   int timeout;
-   int timeoutcnt;
    char name[16];
 } SimPlayer;
 
@@ -52,20 +46,17 @@ typedef struct
 
 void playerJoin(int p);
 void playerLeave(int p);
-void updateAngle(int p, double a, int checkEnergy);
-void validateOld(int p);
+void updateAngle(int p, double a, int ce);
 void updateVelocity(int p, double v);
 void updateName(int p, char* n);
 void tankEnergy(int p);
 void clearTraces(int p);
 void reinitialize(void);
-void toggleWatch(int p);
 
 SimShot* getShot(int p, int s);
 SimPlanet* getPlanet(int i);
 SimPlayer* getPlayer(int p);
 double getFlash(void);
-int getCurrentPlayer(void);
 
 void initSimulation(void);
 void stepSimulation(void);

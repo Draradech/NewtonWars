@@ -1,34 +1,29 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define LIMIT(x, min, max) (((x) < (min)) ? (min) : ((x) > (max)) ? (max) : (x))
-
 typedef struct
 {
    int maxPlayers;
    int numPlanets;
-   int maxSegments;
-   int segmentSteps;
    int numShots;
-   int fastmode;
-   int fullscreen;
-   int timeout;
-   int margintop;
-   int marginleft;
-   int marginright;
-   int marginbottom;
-   double playerSize;
-   int energy;
-   int realtime;
    double rate;
-   int debug;
+   double limit;
+   int fullscreen;
    double battlefieldW;
    double battlefieldH;
-   int throttle;
+   double playerSize;
+   int margin;
    char* ip;
    char* message;
+   /* debug options */
+   int fastmode;
+   int throttle;
+   int debug;
    int pot;
    int area;
+   /* fixed */
+   int maxSegments;
+   int segmentSteps;
 } Config;
 
 extern Config conf;
