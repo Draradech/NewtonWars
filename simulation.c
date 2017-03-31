@@ -30,6 +30,25 @@ static void floodfill(int i, int j)
    }
 }
 
+static double calcGPot(Vec2d pos)
+{
+   double l, potential = 0;
+   int j;
+
+   for(j = 0; j < conf.numPlanets; ++j)
+   {
+      l = distance(planet[j].position, pos);
+
+      if (l <= planet[j].radius)
+      {
+         return 0;
+      }
+
+      potential += planet[j].mass / l;
+   }
+   return potential;
+}
+
 static int potentialEvaluation(void)
 {
    int i, j, found;
@@ -43,7 +62,7 @@ static int potentialEvaluation(void)
       for(j = 0; j < 120; ++j)
       {
          p.y = (j - 20.0) * conf.battlefieldH / 80;
-         potential[i][j] = getGPotential(p);
+         potential[i][j] = calcGPot(p);
          area[i][j] = 0;
          if (potential[i][j] > 0.1)
          {
@@ -150,7 +169,7 @@ static void initPlayer(int p, int clear)
       player[p].position.y = (double)rand() / RAND_MAX * conf.battlefieldH;
 
       nok = 0;
-      if(getGPotential(player[p].position) > pmax || getGPotential(player[p].position) < pmin)
+      if(calcGPot(player[p].position) > pmax || calcGPot(player[p].position) < pmin)
       {
          nok = 1;
       }
@@ -343,25 +362,9 @@ static void simulate(void)
    }
 }
 
-double getGPotential(Vec2d pos)
+double getGPot(int i, int j)
 {
-   double l, potential = 0;
-   int j;
-
-   for(j = 0; j < conf.numPlanets; ++j)
-   {
-      Vec2d v;
-      v = vsub(planet[j].position, pos);
-      l = length(v);
-
-      if (l <= planet[j].radius)
-      {
-         return 0;
-      }
-
-      potential += planet[j].mass / l;
-   }
-   return potential;
+   return potential[i][j];
 }
 
 double getPmin() { return pmin; }

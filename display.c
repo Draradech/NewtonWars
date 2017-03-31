@@ -255,13 +255,17 @@ static void draw(void)
 
    if(conf.area)
    {
-      Vec2d p;
+      int i, j;
 
-      for(p.x = -20 * conf.battlefieldW / 120; p.x < 140 * conf.battlefieldW / 120; p.x += conf.battlefieldW / 120)
+      for(i = 0; i < 160; ++i)
       {
-         for(p.y = -20 * conf.battlefieldH / 80; p.y < 100 * conf.battlefieldH / 80; p.y += conf.battlefieldH / 80)
+         for(j = 0; j < 120; ++j)
          {
-            double pot = getGPotential(p);
+            Vec2d p;
+            double pot;
+            p.x = (i - 20.0) * conf.battlefieldW / 120.0;
+            p.y = (j - 20.0) * conf.battlefieldH / 80.0;
+            pot = getGPot(i, j);
             if (pot > getPmin() && pot < getPmax())
             {
                drawString("0", p.x - 7.0, p.y + 12.0, 0.1, 0.2, 0.1);
@@ -272,13 +276,18 @@ static void draw(void)
 
    if(conf.pot)
    {
-      Vec2d p;
+      int i, j;
       char buffer[5];
-      for(p.x = -5 * conf.battlefieldW / 30; p.x < 35 * conf.battlefieldW / 30; p.x += conf.battlefieldW / 30)
+
+      for(i = 0; i < 160; i += 4)
       {
-         for(p.y = -10 * conf.battlefieldH / 40; p.y < 50 * conf.battlefieldH / 40; p.y += conf.battlefieldH / 40)
+         for(j = 0; j < 120; j += 4)
          {
-            double pot = getGPotential(p);
+            Vec2d p;
+            double pot;
+            p.x = (i - 20.0) * conf.battlefieldW / 120.0;
+            p.y = (j - 20.0) * conf.battlefieldH / 80.0;
+            pot = getGPot(i, j);
             if (pot > 0.1)
             {
                sprintf(buffer, "%3.lf", pot);

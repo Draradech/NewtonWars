@@ -61,7 +61,7 @@ double getFlash(void);
 void initSimulation(void);
 void stepSimulation(void);
 
-double getGPotential(Vec2d pos);
+double getGPot(int x, int y);
 double getPmin();
 double getPmax();
 
