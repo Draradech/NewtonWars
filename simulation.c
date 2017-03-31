@@ -305,8 +305,11 @@ static void simulate(void)
                   && (m->leftSource == 1)
                   )
                {
-                  if(conf.debug) printf("l = %.5f playerSize = %.5f missile.x = %.5f missile.y = %.5f player.x = %5f player.y = %5f\n",
-                                         l, conf.playerSize, m->position.x, m->position.y, player[pl2].position.x, player[pl2].position.y);
+                  if(conf.debug)
+                  {
+                     printf("l = %.5f playerSize = %.5f missile.x = %.5f missile.y = %.5f player.x = %5f player.y = %5f\n",
+                             l, conf.playerSize, m->position.x, m->position.y, player[pl2].position.x, player[pl2].position.y);
+                  }
                   playerHit(s, pl, pl2);
                }
 
@@ -329,7 +332,10 @@ static void simulate(void)
          }
       }
    }
-   for(pl = 0, actp = 0; pl < conf.maxPlayers; ++pl) actp += player[pl].active;  
+   for(pl = 0, actp = 0; pl < conf.maxPlayers; ++pl)
+   {
+      actp += player[pl].active;
+   }
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
       SimPlayer* p = &(player[pl]);
@@ -387,7 +393,7 @@ void stepSimulation(void)
 
       if(conf.debug)
       {
-         printf("stepSimulation: %s:%d player=%d player.energy=%.4f player.velocity=%.4f\n", __FILE__, __LINE__, pl, p->energy, p->velocity);
+         printf("stepSimulation: player=%d player.energy=%.4f player.velocity=%.4f\n", pl, p->energy, p->velocity);
       }
 
       if (  (p->active)
@@ -399,8 +405,12 @@ void stepSimulation(void)
          initShot(pl);
          p->valid = 0;
       }
+
       p->energy += conf.rate / 60.0;
-      if(p->energy > conf.limit) p->energy = conf.limit;
+      if(p->energy > conf.limit)
+      {
+         p->energy = conf.limit;
+      }
    }
    simulate();
    killflash *= 0.95;
@@ -420,8 +430,14 @@ void playerLeave(int p)
 void updateAngle(int pl, double a, int ce)
 {
    SimPlayer* p = &(player[pl]);
-   if(!((a > -720.0) && (a < 720.0))) a = 0.0;
+
+   if(!((a > -720.0) && (a < 720.0)))
+   {
+      a = 0.0;
+   }
+
    p->angle = -a + 90.0;
+
    if(!ce || p->energy >= p->velocity)
    {
       p->valid = 1;
@@ -436,7 +452,10 @@ void updateVelocity(int p, double v)
 
 void tankEnergy(int p)
 {
-   if(p >= 0 && p < conf.maxPlayers) player[p].energy += 100;
+   if(p >= 0 && p < conf.maxPlayers)
+   {
+      player[p].energy += 100;
+   }
 }
 
 void updateName(int p, char* n)
