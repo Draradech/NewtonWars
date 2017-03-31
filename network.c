@@ -694,7 +694,7 @@ void stepNetwork(void)
                               {
                                  connection[pi].bot = 4;
                               }
-                              if(connection[pi].bot >= MSG_GAMEMODE)
+                              if(connection[pi].bot >= MSG_GAMEMODE && connection[pi].bot <= MSG_OWN_ENERGY)
                               {
                                  sendGameMode(i, pi);
                               }

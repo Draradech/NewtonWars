@@ -4,11 +4,11 @@
 #define MSG_OWNID 1
 #define MSG_PLAYERLEAVE 2
 #define MSG_PLAYERPOS 3
-#define MSG_SHOTFINISHED 4 /* deprecated by msg 6 */
+#define MSG_SHOTFINISHED 4 /* not sent for bot protocol >= 6 */
 
 #define MSG_SHOTBEGIN 5
-#define MSG_SHOTFIN 6 /* deprecates msg 4 */
-#define MSG_GAMEMODE 7 /* deprecated */
+#define MSG_SHOTFIN 6 /* replaces msg 4 */
+#define MSG_GAMEMODE 7 /* not sent for bot protocol > 8 */
 #define MSG_OWN_ENERGY 8
 
 #define MODE_REALTIME 3
