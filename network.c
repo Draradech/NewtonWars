@@ -777,7 +777,12 @@ void stepNetwork(void)
                         }
                         default:
                         {
-                           updateAngle(pi, atof(connection[pi].msgbuf), connection[pi].controller);
+                           double angle = atof(connection[pi].msgbuf);
+                           if(!connection[pi].bot)
+                           {
+                              angle = -angle + 90.0; // convert from 0° top clockwise to mathematical (0° right ccw)
+                           }
+                           updateAngle(pi, angle, connection[pi].controller);
                            break;
                         }
                      }
