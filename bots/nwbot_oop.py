@@ -76,50 +76,50 @@ class Network:
 
    def evalHead(self):
       self.msgID, self.pid = struct.unpack('II', self.bufHead)
-      if self.msgID == 1:
+      if self.msgID == 1:                    # MSG_OWNID
          self.bot.ownId(self.pid)
          self.initMsg()
-      elif self.msgID == 2:
+      elif self.msgID == 2:                  # MSG_PLAYERLEAVE
          self.bot.playerLeave(self.pid)
          self.initMsg()
-      elif self.msgID == 3:
+      elif self.msgID == 3:                  # MSG_PLAYERPOS
          self.cntBody = 8
-      elif self.msgID == 5:
+      elif self.msgID == 5:                  # MSG_SHOTBEGIN
          self.cntBody = 16
-      elif self.msgID == 6:
+      elif self.msgID == 6:                  # MSG_SHOTFIN
          self.cntHead2 = 20
-      elif self.msgID == 7:
+      elif self.msgID == 7:                  # MSG_GAMEMODE
          self.cntBody = 4
-      elif self.msgID == 8:
+      elif self.msgID == 8:                  # MSG_OWNENERGY
          self.cntBody = 8
       else:
          print("unexpected message id in head: %d" % self.msgID)
 
    def evalHead2(self):
-      if self.msgID == 6:
+      if self.msgID == 6:                    # MSG_SHOTFIN
          a, v, n = struct.unpack("ddI", self.bufHead2)
          self.cntBody = n * 8
       else:
          print("unexpected message id in head2: %d" % self.msgID)
 
    def evalBody(self):
-      if self.msgID == 3:
+      if self.msgID == 3:                    # MSG_PLAYERPOS
          fx, fy = struct.unpack("ff", self.bufBody)
          self.bot.playerPos(self.pid, fx, fy)
-      elif self.msgID == 5:
+      elif self.msgID == 5:                  # MSG_SHOTBEGIN
          a, v = struct.unpack("dd", self.bufBody)
          self.bot.shotBegin(self.pid, a, v)
-      elif self.msgID == 6:
+      elif self.msgID == 6:                  # MSG_SHOTFIN
          a, v, n = struct.unpack("ddI", self.bufHead2)
          curve = []
          for i in range(n):
             curve.append(struct.unpack_from("ff", self.bufBody, 8 * i))
          self.bot.shotFin(self.pid, a, v, curve)
-      elif self.msgID == 7:
+      elif self.msgID == 7:                  # MSG_GAMEMODE
          m, = struct.unpack("I", self.bufBody)
          if m != 3:
             print("unsupported gamemode %d, expect strangeness" % m)
-      elif self.msgID == 8:
+      elif self.msgID == 8:                  # MSG_OWNENERGY
          e, = struct.unpack("d", self.bufBody)
          self.bot.ownEnergy(e)
       else:
@@ -130,7 +130,7 @@ class Network:
 
 class Stupobot:
    def __init__(self, ip):
-      self.net = Network(self, "Stupobot 8", ip)
+      self.net = Network(self, "Stupobot OOP", ip)
       self.angle = 0
       self.mypid = None
       self.energy = 0
@@ -165,14 +165,14 @@ class Stupobot:
    def shotFin(self, pid, a, v, curve):
       print("Player %d finished shot (v: %lf, a: %lf) with %d segments" % (pid, v, a, len(curve)))
       for fx, fy in curve:
-         pass #print("   Curve: %f, %f" % (fx, fy))
+         pass # print("   Curve: %f, %f" % (fx, fy))
 
    def ownEnergy(self, e):
       print("Own energy: %lf" % e)
       if e < 50:
-         self.nextTime = time.time() + 50 - e
+         self.nextTime = time.time() + 1
       else:
-         self.nextTime += 5 # will be updated when all shots are fired, should never take more than 5s
+         self.nextTime += 2 # will be updated when all shots are fired, should never take more than 2s
          self.energy = e
          self.net.shoot(self.angle)
 
@@ -184,7 +184,3 @@ if __name__ == "__main__":
    while True:
       bot.step()
       time.sleep(0.1)
-
-
-
-
