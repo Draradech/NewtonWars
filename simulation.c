@@ -221,11 +221,6 @@ static void missileEnd(SimShot* s)
    }
 }
 
-static void planetHit(SimShot* s)
-{
-   missileEnd(s);
-}
-
 static void playerHit(SimShot* s, int p, int p2)
 {
    if(p == p2)
@@ -242,16 +237,6 @@ static void playerHit(SimShot* s, int p, int p2)
    allSendPlayerPos(p2);
    allSendKillMessage(p, p2);
    killflash = 1.0;
-}
-
-static void wallHit(SimShot* s)
-{
-   missileEnd(s);
-}
-
-static void lengthLimitHit(SimShot* s)
-{
-   missileEnd(s);
 }
 
 static void initShot(int pl)
@@ -299,7 +284,7 @@ static void simulate(void)
 
                if (l <= planet[j].radius)
                {
-                  planetHit(s);
+                  missileEnd(s);
                }
 
                v = vdiv(v, l);
@@ -339,7 +324,7 @@ static void simulate(void)
                || (m->position.y > conf.battlefieldH + conf.margin)
                )
             {
-               wallHit(s);
+               missileEnd(s);
             }
          }
       }
@@ -356,7 +341,7 @@ static void simulate(void)
          s->dot[s->length++] = d2f(s->missile.position);
          if(s->length == conf.maxSegments - 1)
          {
-            lengthLimitHit(s);
+            missileEnd(s);
          }
       }
    }
