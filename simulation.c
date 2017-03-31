@@ -436,6 +436,8 @@ void updateAngle(int pl, double a, int ce)
       a = 0.0;
    }
 
+   p->angle = a;
+
    if(!ce || p->energy >= p->velocity)
    {
       p->valid = 1;
