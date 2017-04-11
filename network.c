@@ -50,6 +50,7 @@ typedef struct
    int local;
    int limit;
    int controller;
+   char ip[INET6_ADDRSTRLEN];
 } connection_t;
 
 typedef struct
@@ -141,6 +142,22 @@ static int is_blocked(char* ip)
    return 0;
 }
 
+static int is_connected(char* ip)
+{
+   int k;
+   for(k = 0; k < conf.maxPlayers; ++k)
+   {
+      if(connection[k].socket)
+      {
+         if(strcmp(ip, connection[k].ip) == 0)
+         {
+            return 1;
+         }
+      }
+   }
+   return 0;
+}
+
 static void update_block_list()
 {
    int i;
@@ -185,7 +202,7 @@ void initNetwork(void)
    int yes = 1;
    int no = 0;
    int rv;
-   
+
    #ifdef _WIN32
    WSADATA wsaData;
    if(WSAStartup(MAKEWORD(2, 0), &wsaData) != 0)
@@ -327,7 +344,7 @@ void sendPlayerLeave(int i, int p)
    binsend[0] = MSG_PLAYERLEAVE;
    binsend[1] = p;
    snd_l(i, 2, binsend);
-} 
+}
 
 void sendPlayerPos(int i, int p)
 {
@@ -403,7 +420,7 @@ void allSendPlayerLeave(int p)
       {
          sendPlayerLeave(connection[k].socket, p);
       }
-   }   
+   }
 }
 
 void allSendPlayerPos(int p)
@@ -415,7 +432,7 @@ void allSendPlayerPos(int p)
       {
          sendPlayerPos(connection[k].socket, p);
       }
-   }   
+   }
 }
 
 void allSendShotFinished(SimShot* s)
@@ -434,7 +451,7 @@ void allSendShotFinished(SimShot* s)
             sendShotFinished(connection[k].socket, s);
          }
       }
-   }   
+   }
 }
 
 void allSendShotBegin(SimShot* s)
@@ -449,7 +466,7 @@ void allSendShotBegin(SimShot* s)
             sendShotBegin(connection[k].socket, s);
          }
       }
-   }   
+   }
 }
 
 void allSendKillMessage(int p, int p2)
@@ -501,18 +518,23 @@ void stepNetwork(void)
             }
             else
             {
-               int blocked;
-               int local;
+               int blocked, connected, local;
                getnameinfo((struct sockaddr *)&remoteaddr, addrlen, remoteIP, sizeof remoteIP, NULL, 0, NI_NUMERICHOST | NI_NUMERICSERV);
                local =   (  (strcmp(remoteIP,"127.0.0.1") == 0)
                          || (strcmp(remoteIP,"::ffff:127.0.0.1") == 0)
                          || (strcmp(remoteIP,"::1") == 0)
                          );
                blocked = local ? 0 : is_blocked(remoteIP);
+               connected = local ? 0 : is_connected(remoteIP);
                if(blocked)
                {
                   close(newfd);
                   printf("new connection from %s on socket %d refused: blocked for %lfs\n", remoteIP, newfd, blocked / 60.0f);
+               }
+               else if(connected)
+               {
+                  close(newfd);
+                  printf("new connection from %s on socket %d refused: already connected\n", remoteIP, newfd);
                }
                else
                {
@@ -523,6 +545,7 @@ void stepNetwork(void)
                         connection[k].socket = newfd;
                         connection[k].local = local;
                         connection[k].limit = 512;
+                        strncpy(connection[k].ip, remoteIP, INET6_ADDRSTRLEN);
                         playerJoin(k);
                         updateName(k, "Anonymous");
                         allSendPlayerPos(k);
