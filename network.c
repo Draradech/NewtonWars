@@ -841,11 +841,11 @@ void stepNetwork(void)
       }
    }
    for(k = 0; k < conf.maxPlayers; ++k)
--  {
--     if(connection[k].socket && connection[k].timeout == 0)
--     {
--        disconnectPlayer(k);
--        allSendPlayerLeave(k);
--     }
--  }   
+   {
+      if(connection[k].socket && connection[k].timeout == 0)
+      {
+         disconnectPlayer(k);
+         allSendPlayerLeave(k);
+      }
+   }   
 }
