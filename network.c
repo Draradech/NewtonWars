@@ -51,6 +51,7 @@ typedef struct
    int limit;
    int controller;
    char ip[INET6_ADDRSTRLEN];
+   int timeout;
 } connection_t;
 
 typedef struct
@@ -191,6 +192,22 @@ static void update_limits()
          if(connection[k].limit > 512)
          {
             connection[k].limit = 512;
+         }
+      }
+   }
+}
+
+static void update_timeouts()
+{
+   int k;
+
+   for(k = 0; k < conf.maxPlayers; ++k)
+   {
+      if(connection[k].socket)
+      {
+         if(connection[k].timeout)
+         {
+            connection[k].timeout--;
          }
       }
    }
@@ -494,6 +511,7 @@ void stepNetwork(void)
 
    update_block_list();
    update_limits();
+   update_timeouts();
 
    tv.tv_sec = 0;
    tv.tv_usec = 1;
@@ -545,6 +563,7 @@ void stepNetwork(void)
                         connection[k].socket = newfd;
                         connection[k].local = local;
                         connection[k].limit = 512;
+                        connection[k].timeout = 5 * 60 * 60;
                         strncpy(connection[k].ip, remoteIP, INET6_ADDRSTRLEN);
                         playerJoin(k);
                         updateName(k, "Anonymous");
@@ -603,6 +622,7 @@ void stepNetwork(void)
             }
             else
             {
+               connection[pi].timeout = 5 * 60 * 60;
                for(k = 0; k < nbytes && pi >= 0; ++k)
                {
                   unsigned char c = buf[k];
@@ -820,4 +840,12 @@ void stepNetwork(void)
          }
       }
    }
+   for(k = 0; k < conf.maxPlayers; ++k)
+-  {
+-     if(connection[k].socket && connection[k].timeout == 0)
+-     {
+-        disconnectPlayer(k);
+-        allSendPlayerLeave(k);
+-     }
+-  }   
 }
