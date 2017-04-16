@@ -1,0 +1,2 @@
+ACTION=="add", KERNEL=="ttyACM*", \
+	RUN+="/home/pi/controller.sh"

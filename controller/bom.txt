@@ -1,0 +1,15 @@
+      Reichelt
+      
+1x    LCD 162C BL    (Display)
+1x    PT 10-L 10K    (Poti Kontrastspannung)
+4x    TASTER 3301    (Taster)
+1x    MS 131 RT      (Feuerknopf)
+1x    STEC12E07      (Drehencoder)
+1x    KNOPF 10-150E  (Knopf für Drehencoder)
+1x    AK 676-AB3     (micro USB Kabel 3m)
+
+
+
+1x    RGB-LED (common anode, mit passenden Vorwiderständen)
+1x    Arduino Pro micro
+4x    M3x10 + Muttern
