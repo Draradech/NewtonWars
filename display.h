@@ -2,6 +2,10 @@
 #define _DISPLAY_H_
 #include "color.h"
 
+#if defined(__MACH__)
+void idleFunc();
+#endif
+
 void updateZoom(double z);
 void toggleFps(void);
 rgb getColor(int player);
