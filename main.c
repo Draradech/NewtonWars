@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <time.h>
-#ifndef WIN32
+#ifdef WIN32
 #include <windows.h>
 #endif
 

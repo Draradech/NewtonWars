@@ -117,7 +117,7 @@ static void drawJoin()
    }
 }
 
-static void drawFps(int offset)
+static void drawFps()
 {
    static unsigned long timeOld;
    static int frameCounter;
@@ -137,10 +137,10 @@ static void drawFps(int offset)
    }
 
    sprintf(buffer, "%.1lf fps", dfps);
-   drawString(buffer, 3.0, (3 + offset) * 24.0, 1.0, 1.0, 1.0);
+   drawString(buffer, 3.0, 4 * 24.0, 1.0, 1.0, 1.0);
 }
 
-static void drawPlayers(int offset, int activeP)
+static void drawPlayers()
 {
    static char buffer[128];
    float x, y;
@@ -152,24 +152,79 @@ static void drawPlayers(int offset, int activeP)
       if(!pl->active) continue;
 
       x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
-      y = (1 + offset) * 24.0;
+      y = 2 * 24.0;
       if (p / 6) y = uiH - 3.0;
       sprintf(buffer, "%s (%d:%d)", pl->name, pl->kills, pl->deaths);
       drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
 
       x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
-      y = (2 + offset) * 24.0;
+      y = 3 * 24.0;
       if (p / 6) y = uiH - 3.0 - 24.0;
       sprintf(buffer, "Energy %d", (int)pl->energy);
       drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
    }
 }
 
-static void draw(void)
+static void drawPlayerList()
 {
-   int i, p, s, actp;
+   static char buffer[128];
+   float x, y;
+   int p;
+   int index = 0;
 
-   for(i = 0, actp = 0; i < conf.maxPlayers; ++i) actp += getPlayer(i)->active;
+   for(p = 0; p < conf.maxPlayers; ++p)
+   {
+      SimPlayer* pl = getPlayer(p);
+      if(!pl->active) continue;
+
+      x = 2 * 24.0 + 3.0;
+      y = (2 * index + 5) * 24.0;
+      sprintf(buffer, "%s (%d:%d)", pl->name, pl->kills, pl->deaths);
+      drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
+      
+      index++;
+   }
+}
+
+static void drawTimer()
+{
+   static char buffer[128];
+   float x, y;
+   
+   if(getMode() == MODE_PLAYING)
+   {
+      x = uiW - 6 * 24.0;
+      y = 24.0;
+      sprintf(buffer, "%02d:%02d", getTimeRemain() / 60 / 60, (getTimeRemain() / 60) % 60);
+      drawString(buffer, x, y, 1.0, 1.0, 1.0);
+   }
+   else
+   {
+      x = 2 * 24.0 + 3.0;
+      y = 24.0;
+      sprintf(buffer, "Round ended, next round in %02d:%02d", getTimeRemain() / 60 / 60, (getTimeRemain() / 60) % 60);
+      drawString(buffer, x, y, 1.0, 1.0, 1.0);
+   }
+}
+
+static void drawBoard(void)
+{
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+
+   glOrtho(0, uiW, uiH, 0, -100, 100); /* left, right, bottom, top, near, far */
+
+   glMatrixMode(GL_MODELVIEW);
+   glLoadIdentity();
+
+   drawJoin();
+   drawTimer();
+   drawPlayerList();
+}
+
+static void drawGame(void)
+{
+   int i, p, s;
 
    glViewport(0, 0, screenW, screenH);
 
@@ -179,9 +234,6 @@ static void draw(void)
 
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
-
-   glClearColor(getFlash(), getFlash(), getFlash(), 1.0);
-   glClear(GL_COLOR_BUFFER_BIT);
 
    glTranslatef(conf.battlefieldW / 2, conf.battlefieldH / 2, 0);
    glScalef(zoom, zoom, zoom);
@@ -305,11 +357,25 @@ static void draw(void)
    glMatrixMode(GL_MODELVIEW);
    glLoadIdentity();
 
-   s = ((actp < conf.maxPlayers) && (conf.ip != 0 || conf.message != 0));
+   drawJoin();
+   drawTimer();
+   drawPlayers();
+   if(fps) drawFps();
+}
 
-   if(s) drawJoin();
-   drawPlayers(s, actp);
-   if(fps) drawFps(s);
+static void draw(void)
+{
+   glClearColor(getFlash(), getFlash(), getFlash(), 1.0);
+   glClear(GL_COLOR_BUFFER_BIT);
+
+   if(getMode() == MODE_PLAYING)
+   {
+      drawGame();
+   }
+   else
+   {
+      drawBoard();
+   }
 
    swapBuffers();
 }

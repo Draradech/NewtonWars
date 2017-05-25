@@ -24,6 +24,7 @@ typedef struct
    /* fixed */
    int maxSegments;
    int segmentSteps;
+   int roundTime;
 } Config;
 
 extern Config conf;

@@ -3,6 +3,9 @@
 
 #include "vector.h"
 
+#define MODE_PLAYING 0
+#define MODE_BOARD 1
+
 typedef struct
 {
    Vec2d position;
@@ -62,7 +65,9 @@ void initSimulation(void);
 void stepSimulation(void);
 
 double getGPot(int x, int y);
-double getPmin();
-double getPmax();
+double getPmin(void);
+double getPmax(void);
+int getTimeRemain(void);
+int getMode(void);
 
 #endif /* _SIMULATION_H_ */

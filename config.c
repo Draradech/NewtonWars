@@ -20,6 +20,7 @@ void help(void)
    printf(" shots         number of displayed past shots, default: 16\n");
    printf(" rate          energy increase rate (default 1.0/s)\n");
    printf(" limit         energy limit (default 200.0)\n");
+   printf(" roundtime     time limit per round in s (default 600)\n");
    printf("\n");
    printf(" fullscreen    fullscreen enabled, default: 1\n");
    printf(" ratio         aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats), default: 16:9\n");
@@ -48,6 +49,7 @@ void config(int* argc, char** argv)
    conf.numShots = 16;
    conf.rate = 1.0;
    conf.limit = 200.01;
+   conf.roundTime = 600; 
 
    conf.fullscreen = 1;
    conf.battlefieldW = sqrt(A * 16 / 9); /* 1885 */
@@ -57,7 +59,7 @@ void config(int* argc, char** argv)
 
    conf.ip = 0;
    conf.message = 0;
-
+   
    //debug
    conf.debug = 0;
    conf.fastmode = 0;
@@ -123,6 +125,15 @@ void config(int* argc, char** argv)
          if(conf.limit > 10000.0 || conf.limit < 10.0)
          {
             printf("limit needs to be >= 0.0 and <= 10.0\n");
+            exit(0);
+         }
+      }
+      else if (strcmp(b, "roundtime") == 0)
+      {
+         conf.roundTime = atof(c);
+         if(conf.roundTime > 3600 || conf.limit < 0)
+         {
+            printf("roundtime needs to be >= 0 and <= 3600\n");
             exit(0);
          }
       }

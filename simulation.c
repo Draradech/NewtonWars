@@ -15,6 +15,8 @@ static SimPlanet* planet;
 static SimPlayer* player;
 static double killflash;
 static double pmin, pmax;
+static int timeRemain;
+int mode;
 double potential[160][120];
 char area[160][120];
 
@@ -382,6 +384,8 @@ void initSimulation(void)
       p->active = 0;
    }
    killflash = 0.0;
+   mode = MODE_PLAYING;
+   timeRemain = conf.roundTime * 60;
 }
 
 void stepSimulation(void)
@@ -412,8 +416,26 @@ void stepSimulation(void)
          p->energy = conf.limit;
       }
    }
-   simulate();
+   
+   if(mode == MODE_PLAYING)
+   {
+      simulate();
+   }
    killflash *= 0.95;
+   
+   timeRemain--;
+   if(!timeRemain)
+   {
+      mode = !mode;
+      if(mode == MODE_BOARD)
+      {
+         timeRemain = 20 * 60;
+      }
+      else
+      {
+         reinitialize();
+      }
+   }
 }
 
 void playerJoin(int p)
@@ -489,6 +511,8 @@ void reinitialize(void)
          allSendPlayerPos(pl);
       }
    }
+   mode = MODE_PLAYING;
+   timeRemain = conf.roundTime * 60;
 }
 
 SimShot* getShot(int p, int s)
@@ -510,3 +534,15 @@ double getFlash(void)
 {
    return killflash;
 }
+
+int getTimeRemain(void)
+{
+   return timeRemain;
+}
+
+int getMode(void)
+{
+   return mode;
+}
+
+
