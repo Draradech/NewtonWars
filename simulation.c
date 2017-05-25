@@ -420,8 +420,8 @@ void stepSimulation(void)
    if(mode == MODE_PLAYING)
    {
       simulate();
+      killflash *= 0.95;
    }
-   killflash *= 0.95;
    
    timeRemain--;
    if(!timeRemain)
@@ -513,6 +513,7 @@ void reinitialize(void)
    }
    mode = MODE_PLAYING;
    timeRemain = conf.roundTime * 60;
+   killflash = 0.0;
 }
 
 SimShot* getShot(int p, int s)
@@ -532,7 +533,7 @@ SimPlayer* getPlayer(int p)
 
 double getFlash(void)
 {
-   return killflash;
+   return mode == MODE_PLAYING ? killflash : 0.0;
 }
 
 int getTimeRemain(void)

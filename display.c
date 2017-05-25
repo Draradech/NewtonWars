@@ -168,7 +168,6 @@ static void drawPlayers()
 static void drawPlayerList()
 {
    static char buffer[128];
-   float x, y;
    int p;
    int index = 0;
 
@@ -177,10 +176,8 @@ static void drawPlayerList()
       SimPlayer* pl = getPlayer(p);
       if(!pl->active) continue;
 
-      x = 2 * 24.0 + 3.0;
-      y = (2 * index + 5) * 24.0;
       sprintf(buffer, "%s (%d:%d)", pl->name, pl->kills, pl->deaths);
-      drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
+      drawString(buffer, 2 * 24.0 + 3.0, (2 * index + 5) * 24.0, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
       
       index++;
    }
@@ -193,17 +190,13 @@ static void drawTimer()
    
    if(getMode() == MODE_PLAYING)
    {
-      x = uiW - 6 * 24.0;
-      y = 24.0;
       sprintf(buffer, "%02d:%02d", getTimeRemain() / 60 / 60, (getTimeRemain() / 60) % 60);
-      drawString(buffer, x, y, 1.0, 1.0, 1.0);
+      drawString(buffer, uiW - 6 * 14.0, 24.0, 1.0, 1.0, 1.0);
    }
    else
    {
-      x = 2 * 24.0 + 3.0;
-      y = 24.0;
       sprintf(buffer, "Round ended, next round in %02d:%02d", getTimeRemain() / 60 / 60, (getTimeRemain() / 60) % 60);
-      drawString(buffer, x, y, 1.0, 1.0, 1.0);
+      drawString(buffer, 3.0, 2 * 24.0, 1.0, 1.0, 1.0);
    }
 }
 
