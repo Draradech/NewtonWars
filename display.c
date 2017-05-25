@@ -55,7 +55,8 @@ static float vertCircle[32][2];
 static float left, right, bottom, top, zoom;
 static int screenW, screenH;
 static float uiW, uiH;
-static int fps;
+static int fps, sorted;
+static int* playersByPoints;
 
 rgb getColor(int player)
 {
@@ -165,24 +166,6 @@ static void drawPlayers()
    }
 }
 
-static void drawPlayerList()
-{
-   static char buffer[128];
-   int p;
-   int index = 0;
-
-   for(p = 0; p < conf.maxPlayers; ++p)
-   {
-      SimPlayer* pl = getPlayer(p);
-      if(!pl->active) continue;
-
-      sprintf(buffer, "%s (%d:%d)", pl->name, pl->kills, pl->deaths);
-      drawString(buffer, 2 * 24.0 + 3.0, (2 * index + 5) * 24.0, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
-      
-      index++;
-   }
-}
-
 static void drawTimer()
 {
    static char buffer[128];
@@ -201,6 +184,9 @@ static void drawTimer()
 
 static void drawBoard(void)
 {
+   static char buffer[128];
+   int p, i;
+
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
 
@@ -211,7 +197,21 @@ static void drawBoard(void)
 
    drawJoin();
    drawTimer();
-   drawPlayerList();
+
+   drawString("Kills   Deaths", (2 + 20) * 14.0 + 3.0, 5 * 24.0, 1.0, 1.0, 1.0);
+
+   for(i = 0; i < conf.maxPlayers; ++i)
+   {
+      p = playersByPoints[i];
+      SimPlayer* pl = getPlayer(p);
+      if(!pl->active) continue;
+
+      sprintf(buffer, "%s", pl->name);
+      drawString(buffer, 2 * 24.0 + 3.0, (7 + 2 * i) * 24.0, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
+
+      sprintf(buffer, " %3d      %3d", pl->kills, pl->deaths);
+      drawString(buffer, (2 + 20) * 14.0 + 3.0, (7 + 2 * i) * 24.0, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
+   }
 }
 
 static void drawGame(void)
@@ -355,6 +355,18 @@ static void drawGame(void)
    if(fps) drawFps();
 }
 
+static int compar(const void * a, const void* b)
+{
+   SimPlayer* pa = getPlayer(*(int *)a);
+   SimPlayer* pb = getPlayer(*(int *)b);
+   
+   if((!pa->active) && (!pb->active)) return *(int *)a - *(int *)b;
+   if(!pa->active) return 1;
+   if(!pb->active) return -1;
+   if(pa->kills == pb->kills) return pa->deaths - pb->deaths;
+   return pb->kills - pa->kills;
+}
+
 static void draw(void)
 {
    glClearColor(getFlash(), getFlash(), getFlash(), 1.0);
@@ -362,10 +374,16 @@ static void draw(void)
 
    if(getMode() == MODE_PLAYING)
    {
+      sorted = 0;
       drawGame();
    }
    else
    {
+      if(sorted == 0)
+      {
+         qsort(playersByPoints, conf.maxPlayers, sizeof(int), compar);
+         sorted = 1;
+      }
       drawBoard();
    }
 
@@ -412,6 +430,7 @@ void initDisplay(int* argc, char** argv)
    glEnableClientState(GL_VERTEX_ARRAY);
 
    uiPlayer = malloc(conf.maxPlayers * sizeof(UiPlayer));
+   playersByPoints = malloc(conf.maxPlayers * sizeof(int));
 
    for(p = 0; p < conf.maxPlayers; ++p)
    {
@@ -420,7 +439,9 @@ void initDisplay(int* argc, char** argv)
       color.s = 0.8;
       color.v = 1.0;
       uiPlayer[p].color = hsv2rgb(color);
+      playersByPoints[p] = p;
    }
+   sorted = 0;
    zoom = 0.8;
 
    for(i = 0; i < 8; ++i)

@@ -205,7 +205,7 @@ static void update_timeouts()
    {
       if(connection[k].socket)
       {
-         if(connection[k].timeout)
+         if(getMode() == MODE_PLAYING && connection[k].timeout)
          {
             connection[k].timeout--;
          }
