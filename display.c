@@ -411,6 +411,10 @@ void toggleFps(void)
 }
 
 #if defined TARGET_GLUT
+static void idleFunc(void)
+{
+}
+
 static void initSystem(int* argc, char ** argv)
 {
    glutInit(argc, argv);
@@ -429,9 +433,10 @@ static void initSystem(int* argc, char ** argv)
 
    glutDisplayFunc(draw);
    glutReshapeFunc(reshape);
+   glutIdleFunc(idleFunc);
 }
 
-static void swapBuffers()
+static void swapBuffers(void)
 {
    glutSwapBuffers();
 }
@@ -441,18 +446,11 @@ static unsigned long getTime(void)
    return glutGet(GLUT_ELAPSED_TIME);
 }
 
-#if defined(__MACH__)
-void idleFunc ()
-{
-}
-#endif
-
 void stepDisplay(void)
 {
    glutPostRedisplay();
 #if defined(__MACH__)
    glutCheckLoop();
-   glutIdleFunc(idleFunc);
 #else
    glutMainLoopEvent();
 #endif
