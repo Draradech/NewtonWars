@@ -186,8 +186,7 @@ static void drawPlayerList()
 static void drawTimer()
 {
    static char buffer[128];
-   float x, y;
-   
+
    if(getMode() == MODE_PLAYING)
    {
       sprintf(buffer, "%02d:%02d", getTimeRemain() / 60 / 60, (getTimeRemain() / 60) % 60);
