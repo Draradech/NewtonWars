@@ -5,7 +5,9 @@ NewtonWars is a space battle game. Gravity is the main theme, influencing the pa
 
 It is heavily inspired by [Gravitational Combat](http://home.cs.tum.edu/~jain/software/gravcombat.php).
 
-The game is played with the display on a TV or projector and each participant connected via telnet (with a laptop or smartphone).
+The game is played with the display on a TV or projector and each participant connected via telnet (with a laptop or smartphone). 
+
+Hint: NewtonWars assumes vsync is enabled. If it is running way too fast on your system, you can use the throttle argument to slow it down (set to 16 for example).
 
 
 Milestones
