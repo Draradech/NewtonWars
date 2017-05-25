@@ -1,5 +1,8 @@
 #include <stdlib.h>
 #include <time.h>
+#ifndef WIN32
+#include <windows.h>
+#endif
 
 #include "config.h"
 #include "network.h"
@@ -14,7 +17,7 @@ void millisleep(int millis)
    ts.tv_nsec = (millis % 1000) * 1000000;
    nanosleep(&ts, NULL);
    #else
-   // todo
+   Sleep(millis);
    #endif
 }
 
