@@ -168,7 +168,7 @@ static void drawPlayers(int offset, int activeP)
 static void draw(void)
 {
    int i, p, s, actp;
-   
+
    for(i = 0, actp = 0; i < conf.maxPlayers; ++i) actp += getPlayer(i)->active;
 
    glViewport(0, 0, screenW, screenH);
@@ -379,11 +379,11 @@ void initDisplay(int* argc, char** argv)
       vertCircle[16 + 2 * i + 1][0] = -x;
       vertCircle[16 + 2 * i + 1][1] = -y;
    }
-   
+
    fp = fopen("font24.raw", "rb");
    assert(fread(font, 1, 96*24*16*4, fp) == 96*24*16*4);
    fclose(fp);
-   
+
    /* Create a texture that will hold the font */
    glGenTextures(1, &tex);
    glBindTexture(GL_TEXTURE_2D, tex);
@@ -395,7 +395,7 @@ void initDisplay(int* argc, char** argv)
    /* Linear filtering usually looks best for text */
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-   
+
    /* Upload the font */
    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 96*16, 24, 0, GL_RGBA, GL_UNSIGNED_BYTE, font);
 }
@@ -441,11 +441,18 @@ static unsigned long getTime(void)
    return glutGet(GLUT_ELAPSED_TIME);
 }
 
+#if defined(__MACH__)
+void idleFunc ()
+{
+}
+#endif
+
 void stepDisplay(void)
 {
    glutPostRedisplay();
 #if defined(__MACH__)
    glutCheckLoop();
+   glutIdleFunc(idleFunc);
 #else
    glutMainLoopEvent();
 #endif
