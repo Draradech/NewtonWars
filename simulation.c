@@ -213,6 +213,7 @@ static void playerHit(SimShot* s, int p, int p2)
    {
      player[p].kills++;
      player[p2].deaths++;
+     player[p].energy += player[p2].energy / 2;
    }
    missileEnd(s);
    initPlayer(p2, 0);
