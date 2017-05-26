@@ -149,6 +149,7 @@ static void initPlayer(int p, int clear)
    player[p].energy = 20.0;
    player[p].active = 1;
    player[p].valid = 0;
+   player[p].extrapoints = 0;
 
    for(i = 0; i < conf.numShots; ++i)
    {
@@ -211,7 +212,7 @@ static void playerHit(SimShot* s, int p, int p2)
    }
    else
    {
-     player[p].kills++;
+     player[p].kills=player[p2].extrapoints + 1;
      player[p2].deaths++;
      player[p].energy += player[p2].energy / 2;
    }
@@ -405,6 +406,7 @@ void stepSimulation(void)
    }
    
    timeRemain--;
+   stepGamemode(timeRemain);
    if(!timeRemain)
    {
       mode = !mode;
@@ -415,6 +417,101 @@ void stepSimulation(void)
       else
       {
          reinitialize();
+      }
+   }
+}
+
+void stepGamemode(int timeremain)
+{
+   int ip;
+   //tick approx once per second:
+   if( !(timeremain % 64) )
+   {
+      if(conf.gametype != CONFIG_GAMETYPE_DEFAULT)
+      {
+         switch(conf.gametype)
+         {
+            case CONFIG_GAMETYPE_PREFERED_TARGET:
+            {
+               static int currentPreferedTarget;
+               char choosenew=1;
+               //Find active player that is prefered target
+               for(ip = 0; ip < conf.maxPlayers; ++ip)
+               {
+                   SimPlayer* p = &(player[ip]);
+                   if(p->active && p->extrapoints)
+                   {
+                      choosenew=0;
+                      break;
+                   }
+               }
+               
+               if(choosenew)
+               {
+                  //no prefered target. Choose a new one:
+                  ip=(currentPreferedTarget+1) % conf.maxPlayers;
+                  for(ip=(currentPreferedTarget+1) % conf.maxPlayers;
+                      ip != currentPreferedTarget; ip=(ip+1)% conf.maxPlayers)
+                  {
+                      SimPlayer* p = &(player[ip]);
+                      if(p->active)
+                      {
+                         printf("%d is new prefered target\n",ip);
+                         p->extrapoints=1;
+                         currentPreferedTarget=ip;
+                         break;
+                      }
+                  }
+               }
+               break;
+            }
+            case CONFIG_GAMETYPE_KILL_OLDEST:
+            {
+               static int tickcount;
+               ++tickcount;
+               if(!(tickcount%64))
+               {
+                  for(ip = 0; ip < conf.maxPlayers; ++ip)
+                  {
+                      SimPlayer* p = &(player[ip]);
+                      if(p->active && p->extrapoints<3)
+                      {
+                         ++p->extrapoints;
+                         break;
+                      }
+                  }
+                  tickcount=0;
+               }
+               break;
+            }
+            case CONFIG_GAMETYPE_KILL_BEST:
+            {
+               int bestplayer=-1;
+               int maxkills=-1;
+               for(ip = 0; ip < conf.maxPlayers; ++ip)
+               {
+                   SimPlayer* p = &(player[ip]);
+                   if(p->active)
+                   {
+                      p->extrapoints=0;
+                      if( p->kills ==  maxkills)
+                      {
+                         bestplayer=-1;
+                      }
+                      else if(p->kills > maxkills)
+                      {
+                         maxkills=p->kills;
+                         bestplayer=ip;
+                      }
+                   }
+               }
+               if(bestplayer!=-1)
+               {
+                  player[bestplayer].extrapoints=1;
+               }
+               break;
+            }
+         }
       }
    }
 }
@@ -526,5 +623,4 @@ int getMode(void)
 {
    return mode;
 }
-
 

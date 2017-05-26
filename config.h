@@ -1,6 +1,11 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+#define CONFIG_GAMETYPE_DEFAULT         0
+#define CONFIG_GAMETYPE_PREFERED_TARGET 1
+#define CONFIG_GAMETYPE_KILL_OLDEST     2
+#define CONFIG_GAMETYPE_KILL_BEST       3
+
 typedef struct
 {
    int maxPlayers;
@@ -15,6 +20,7 @@ typedef struct
    int margin;
    char* ip;
    char* message;
+   int gametype;
    /* debug options */
    int fastmode;
    int throttle;

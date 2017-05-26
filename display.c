@@ -163,6 +163,15 @@ static void drawPlayers()
       if (p / 6) y = uiH - 3.0 - 24.0;
       sprintf(buffer, "Energy %d", (int)pl->energy);
       drawString(buffer, x, y, uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b);
+
+      x = (p % 6) * uiW / MIN(conf.maxPlayers, 6) + 3.0;
+      y = 4 * 24.0;
+      if (p / 6) y = uiH - 3.0 - 24.0;
+      if(pl->extrapoints)
+      {
+         sprintf(buffer, "+%d if killed", pl->extrapoints);
+         drawString(buffer, x, y, 1., 1., 1.);
+      }
    }
 }
 
@@ -274,11 +283,27 @@ static void drawGame(void)
    {
       SimPlayer* pl = getPlayer(p);
       if(!pl->active) continue;
+
+      int iE;
+      for(iE=1;iE<=pl->extrapoints;++iE)
+      {
+         glColor4f(1., 1., 1., 1.0f);
+         glPushMatrix();
+         glTranslatef(pl->position.x, pl->position.y, 0);
+         glScalef(conf.playerSize+12*iE, conf.playerSize+12*iE, 1.0);
+         glVertexPointer(2, GL_FLOAT, 0, vertCircle);
+   	     glDrawArrays(GL_LINE_LOOP, 0, 16);
+         glDrawArrays(GL_LINES, 8, 8);
+         glPopMatrix();
+      }
+
       glColor4f(uiPlayer[p].color.r, uiPlayer[p].color.g, uiPlayer[p].color.b, 1.0f);
       glPushMatrix();
+
       glTranslatef(pl->position.x, pl->position.y, 0);
       glScalef(conf.playerSize, conf.playerSize, 1.0);
       glVertexPointer(2, GL_FLOAT, 0, vertCircle);
+
       glDrawArrays(GL_LINE_LOOP, 0, 16);
       glDrawArrays(GL_LINES, 16, 16);
       glPopMatrix();
