@@ -801,7 +801,7 @@ void stepNetwork(void)
                            {
                               sendOwnEnergy(i, pi);
                            }
-                           if(connection[pi].controller)
+                           else if(!connection[pi].bot)
                            {
                               sprintf(sendbuf,"%4d\n", (int)getPlayer(pi)->energy);
                               snd(i, sendbuf);
@@ -810,12 +810,9 @@ void stepNetwork(void)
                         }
                         case 'g':
                         {
-                           if(connection[pi].controller)
-                           {
-                              rgb col = getColor(pi);
-                              sprintf(sendbuf,"%3.0lf %3.0lf %3.0lf\n", col.r * 255, col.g * 255, col.b * 255);
-                              snd(i, sendbuf);
-                           }
+                           rgb col = getColor(pi);
+                           sprintf(sendbuf,"%3.0lf %3.0lf %3.0lf\n", col.r * 255, col.g * 255, col.b * 255);
+                           snd(i, sendbuf);
                            break;
                         }
                         default:
