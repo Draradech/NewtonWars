@@ -67,7 +67,7 @@ void config(int* argc, char** argv)
    
    //fixed
    conf.maxSegments = 2000;
-   conf.segmentSteps = 50;
+   conf.segmentSteps = 25;
 
    for(i = 1; i < *argc; ++i)
    {

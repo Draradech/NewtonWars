@@ -135,7 +135,7 @@ static void initPlanets(void)
 
 static void initPlayer(int p, int clear)
 {
-   int i, j, k, nok, tries;
+   int i, nok;
 
    if(clear)
    {
@@ -164,7 +164,6 @@ static void initPlayer(int p, int clear)
       }
    }
 
-   tries = 0;
    do
    {
       player[p].position.x = (double)rand() / RAND_MAX * conf.battlefieldW;
@@ -190,26 +189,7 @@ static void initPlayer(int p, int clear)
             nok = 1;
          }
       }
-      for(i = 0; i < conf.maxPlayers && tries < 2000 && !nok; ++i)
-      {
-         if(i == p || !player[i].active) continue;
-         for(j = 0; j < conf.numShots && !nok; ++j)
-         {
-            for(k = 0; k < player[i].shot[j].length && !nok; ++k)
-            {
-               if(distance(player[p].position, f2d(player[i].shot[j].dot[k])) <= 100.0) /* player distance from existing shots */
-               {
-                  nok = 1;
-               }
-            }
-         }
-      }
-      tries++;
    } while (nok);
-   if(tries >= 2000)
-   {
-      printf("Couldn't keep player spawn away from existing shots.\n");
-   }
 }
 
 static void missileEnd(SimShot* s)

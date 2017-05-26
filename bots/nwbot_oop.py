@@ -165,7 +165,7 @@ class Stupobot:
    def shotFin(self, pid, a, v, curve):
       print("Player %d finished shot (v: %lf, a: %lf) with %d segments" % (pid, v, a, len(curve)))
       for fx, fy in curve:
-         pass # print("   Curve: %f, %f" % (fx, fy))
+         print("   Curve: %f, %f" % (fx, fy))
 
    def ownEnergy(self, e):
       print("Own energy: %lf" % e)
@@ -179,7 +179,7 @@ class Stupobot:
 
 
 if __name__ == "__main__":
-   bot = Stupobot("192.168.2.123")
+   bot = Stupobot("127.0.0.1")
 
    while True:
       bot.step()
