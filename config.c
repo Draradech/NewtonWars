@@ -61,7 +61,7 @@ void config(int* argc, char** argv)
    conf.ip = 0;
    conf.message = 0;
 
-   conf.gametype = CONFIG_GAMETYPE_DEFAULT;
+   conf.extrapoints = CONFIG_EXTRAPOINTS_DEFAULT;
    
    //debug
    conf.debug = 0;
@@ -243,23 +243,23 @@ void config(int* argc, char** argv)
          help();
          exit(0);
       }
-      else if ( (strcmp(b, "gamemode") == 0) )
+      else if ( (strcmp(b, "extrapoints") == 0) )
       {
           if( strcmp(c,"prefered") == 0 )
           {
-             conf.gametype = CONFIG_GAMETYPE_PREFERED_TARGET;
+             conf.extrapoints = CONFIG_EXTRAPOINTS_PREFERED_TARGET;
           }
           else if( strcmp(c,"oldest") == 0 )
           {
-             conf.gametype = CONFIG_GAMETYPE_KILL_OLDEST;
+             conf.extrapoints = CONFIG_EXTRAPOINTS_KILL_OLDEST;
           }
           else if( strcmp(c,"best") == 0 )
           {
-             conf.gametype = CONFIG_GAMETYPE_KILL_BEST;
+             conf.extrapoints = CONFIG_EXTRAPOINTS_KILL_BEST;
           }
           else
           {
-             conf.gametype = CONFIG_GAMETYPE_DEFAULT;
+             conf.extrapoints = CONFIG_EXTRAPOINTS_DEFAULT;
           }
       }
       else

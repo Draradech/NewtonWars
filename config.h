@@ -1,10 +1,10 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define CONFIG_GAMETYPE_DEFAULT         0
-#define CONFIG_GAMETYPE_PREFERED_TARGET 1
-#define CONFIG_GAMETYPE_KILL_OLDEST     2
-#define CONFIG_GAMETYPE_KILL_BEST       3
+#define CONFIG_EXTRAPOINTS_DEFAULT         0
+#define CONFIG_EXTRAPOINTS_PREFERED_TARGET 1
+#define CONFIG_EXTRAPOINTS_KILL_OLDEST     2
+#define CONFIG_EXTRAPOINTS_KILL_BEST       3
 
 typedef struct
 {
@@ -20,7 +20,7 @@ typedef struct
    int margin;
    char* ip;
    char* message;
-   int gametype;
+   int extrapoints;
    /* debug options */
    int fastmode;
    int throttle;

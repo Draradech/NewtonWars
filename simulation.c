@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
-
+#include <limits.h>
 #include "config.h"
 #include "network.h"
 
@@ -150,6 +150,7 @@ static void initPlayer(int p, int clear)
    player[p].active = 1;
    player[p].valid = 0;
    player[p].extrapoints = 0;
+   player[p].framesalive = 0;
 
    for(i = 0; i < conf.numShots; ++i)
    {
@@ -212,7 +213,7 @@ static void playerHit(SimShot* s, int p, int p2)
    }
    else
    {
-     player[p].kills=player[p2].extrapoints + 1;
+     player[p].kills+=player[p2].extrapoints + 1;
      player[p2].deaths++;
      player[p].energy += player[p2].energy / 2;
    }
@@ -397,6 +398,11 @@ void stepSimulation(void)
       {
          p->energy = conf.limit;
       }
+      
+      if (p->active)
+      {
+        ++p->framesalive;
+      }
    }
    
    if(mode == MODE_PLAYING)
@@ -406,7 +412,7 @@ void stepSimulation(void)
    }
    
    timeRemain--;
-   stepGamemode(timeRemain);
+   stepExtrapoints(timeRemain);
    if(!timeRemain)
    {
       mode = !mode;
@@ -421,17 +427,17 @@ void stepSimulation(void)
    }
 }
 
-void stepGamemode(int timeremain)
+void stepExtrapoints(int timeremain)
 {
    int ip;
    //tick approx once per second:
    if( !(timeremain % 64) )
    {
-      if(conf.gametype != CONFIG_GAMETYPE_DEFAULT)
+      if(conf.extrapoints != CONFIG_EXTRAPOINTS_DEFAULT)
       {
-         switch(conf.gametype)
+         switch(conf.extrapoints)
          {
-            case CONFIG_GAMETYPE_PREFERED_TARGET:
+            case CONFIG_EXTRAPOINTS_PREFERED_TARGET:
             {
                static int currentPreferedTarget;
                char choosenew=1;
@@ -465,29 +471,27 @@ void stepGamemode(int timeremain)
                }
                break;
             }
-            case CONFIG_GAMETYPE_KILL_OLDEST:
+            case CONFIG_EXTRAPOINTS_KILL_OLDEST:
             {
-               static int tickcount;
-               ++tickcount;
-               if(!(tickcount%64))
+               for(ip = 0; ip < conf.maxPlayers; ++ip)
                {
-                  for(ip = 0; ip < conf.maxPlayers; ++ip)
+                  SimPlayer* p = &(player[ip]);
+                  if(p->active)
                   {
-                      SimPlayer* p = &(player[ip]);
-                      if(p->active && p->extrapoints<3)
-                      {
-                         ++p->extrapoints;
-                         break;
-                      }
+                     //One extra point every ~20 seconds
+                     p->extrapoints = p->framesalive/1024;
+                     if(p->extrapoints>3)
+                     {
+                        p->extrapoints=3;
+                     }
                   }
-                  tickcount=0;
                }
                break;
             }
-            case CONFIG_GAMETYPE_KILL_BEST:
+            case CONFIG_EXTRAPOINTS_KILL_BEST:
             {
-               int bestplayer=-1;
                int maxkills=-1;
+               int mindeaths=INT_MAX;
                for(ip = 0; ip < conf.maxPlayers; ++ip)
                {
                    SimPlayer* p = &(player[ip]);
@@ -496,18 +500,34 @@ void stepGamemode(int timeremain)
                       p->extrapoints=0;
                       if( p->kills ==  maxkills)
                       {
-                         bestplayer=-1;
+                         if(p->deaths < mindeaths)
+                         {
+                           mindeaths=p->deaths;
+                         }
                       }
                       else if(p->kills > maxkills)
                       {
                          maxkills=p->kills;
-                         bestplayer=ip;
+                         mindeaths=p->deaths;
+
                       }
                    }
                }
-               if(bestplayer!=-1)
+
+               //no extrapoints on 0:0
+               if(maxkills>0 || mindeaths>0)
                {
-                  player[bestplayer].extrapoints=1;
+                  for(ip = 0; ip < conf.maxPlayers; ++ip)
+                  {
+                     SimPlayer* p = &(player[ip]);
+                     if(p->active)
+                     {
+                        if(p->deaths==mindeaths && p->kills==maxkills)
+                        {
+                           p->extrapoints=1;
+                        }
+                     }
+                  }
                }
                break;
             }
