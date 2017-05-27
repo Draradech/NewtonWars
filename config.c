@@ -21,6 +21,7 @@ void help(void)
    printf(" rate          energy increase rate (default 1.0/s)\n");
    printf(" limit         energy limit (default 200.0)\n");
    printf(" roundtime     time limit per round in s (default 600)\n");
+   printf(" extrapoints   selects the extrapoint mode (one out of: default, prefered, oldest, best\n");
    printf("\n");
    printf(" fullscreen    fullscreen enabled, default: 1\n");
    printf(" ratio         aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats), default: 16:9\n");
@@ -59,6 +60,8 @@ void config(int* argc, char** argv)
 
    conf.ip = 0;
    conf.message = 0;
+
+   conf.extrapoints = CONFIG_EXTRAPOINTS_DEFAULT;
    
    //debug
    conf.debug = 0;
@@ -239,6 +242,25 @@ void config(int* argc, char** argv)
       {
          help();
          exit(0);
+      }
+      else if ( (strcmp(b, "extrapoints") == 0) )
+      {
+          if( strcmp(c,"prefered") == 0 )
+          {
+             conf.extrapoints = CONFIG_EXTRAPOINTS_PREFERED_TARGET;
+          }
+          else if( strcmp(c,"oldest") == 0 )
+          {
+             conf.extrapoints = CONFIG_EXTRAPOINTS_KILL_OLDEST;
+          }
+          else if( strcmp(c,"best") == 0 )
+          {
+             conf.extrapoints = CONFIG_EXTRAPOINTS_KILL_BEST;
+          }
+          else
+          {
+             conf.extrapoints = CONFIG_EXTRAPOINTS_DEFAULT;
+          }
       }
       else
       {

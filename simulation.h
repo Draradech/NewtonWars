@@ -38,6 +38,8 @@ typedef struct
    int active;
    int valid;
    char name[16];
+   int extrapoints;
+   int framesalive;
 } SimPlayer;
 
 typedef struct
@@ -63,6 +65,7 @@ double getFlash(void);
 
 void initSimulation(void);
 void stepSimulation(void);
+void stepExtrapoints(int timeRemain);
 
 double getGPot(int x, int y);
 double getPmin(void);
