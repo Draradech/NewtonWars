@@ -94,9 +94,9 @@ static void snd(int socket, char* msg)
 {
    int flags;
    #if defined __APPLE__ || defined _WIN32
-   flags = 0;
+   flags = MSG_DONTWAIT;
    #else
-   flags = MSG_NOSIGNAL;
+   flags = MSG_NOSIGNAL | MSG_DONTWAIT;
    #endif
    if(send(socket, msg, strlen(msg), flags) == -1)
    {
@@ -108,9 +108,9 @@ static void snd_l(int socket, int len, uint32_t* msg)
 {
    int flags;
    #if defined __APPLE__ || defined _WIN32
-   flags = 0;
+   flags = MSG_DONTWAIT;
    #else
-   flags = MSG_NOSIGNAL;
+   flags = MSG_NOSIGNAL | MSG_DONTWAIT;
    #endif
    if(send(socket, (char*)msg, sizeof(uint32_t) * len, flags) == -1)
    {
