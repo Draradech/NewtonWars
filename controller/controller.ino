@@ -1,7 +1,9 @@
 #include <LiquidCrystal.h>
 #include <util/atomic.h>
+#include "Clock4.h"
 
 LiquidCrystal lcd(14, 15, 18, 19, 20, 21);
+Clock4 clk;
 
 #define LED_R 3
 #define LED_G 5
@@ -17,10 +19,19 @@ LiquidCrystal lcd(14, 15, 18, 19, 20, 21);
 
 int8_t pos = 0;
 int8_t enc_a_old = 0;
+uint32_t last_a_0 = 0;
+uint32_t last_b_0 = 0;
 void evaluateEnc()
 {
   uint8_t enc_a = !!(PINE & (1 << PE6));
   uint8_t enc_b = (PINB & (1 << PB2));
+  uint32_t now = micros();
+  if(!enc_a) last_a_0 = now;
+  else if(now - last_a_0 < 1000) enc_a = 0;
+  
+  if(!enc_b) last_b_0 = now;
+  else if(now - last_b_0 < 1000) enc_b = 0;
+  
   if(!enc_b)
   {
     pos += (enc_a_old - enc_a);
@@ -33,8 +44,11 @@ void setup()
   Serial.begin(115200);
 
   lcd.begin(16, 2);
+  clk.period(100);
+  clk.attachInterrupt(evaluateEnc);
 
-  attachInterrupt(digitalPinToInterrupt(ENC_A), evaluateEnc, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(ENC_A), evaluateEnc, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(ENC_B), evaluateEnc, CHANGE);
 
   pinMode(LED_R, OUTPUT);
   pinMode(LED_G, OUTPUT);
