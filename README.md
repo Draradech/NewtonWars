@@ -3,7 +3,7 @@ NewtonWars
 
 NewtonWars is a space battle game. Gravity is the main theme, influencing the path of your missiles around numerous planets on the battlefield.
 
-It is heavily inspired by [Gravitational Combat](http://home.cs.tum.edu/~jain/software/gravcombat.php).
+It is heavily inspired by [Gravitational Combat](https://web.archive.org/web/20041128233753/http://home.cs.tum.edu/~jain/software/gravcombat.php).
 
 The game is played with the display on a TV or projector and each participant connected via telnet (with a laptop or smartphone). 
 
