@@ -292,7 +292,7 @@ static void drawGame(void)
          glTranslatef(pl->position.x, pl->position.y, 0);
          glScalef(conf.playerSize+12*iE, conf.playerSize+12*iE, 1.0);
          glVertexPointer(2, GL_FLOAT, 0, vertCircle);
-   	     glDrawArrays(GL_LINE_LOOP, 0, 16);
+         glDrawArrays(GL_LINE_LOOP, 0, 16);
          glDrawArrays(GL_LINES, 8, 8);
          glPopMatrix();
       }

@@ -12,6 +12,13 @@ Hint: NewtonWars assumes vsync is enabled. If it is running way too fast on your
 
 Milestones
 ==========
+2022-09-18
+----------
+Added debris particles on death, changed some setting defaults
+
+2017-05-27
+----------
+Game is played in rounds (duration configurable), half of the victims energy is added to the killer
 
 2016-09-06
 ----------

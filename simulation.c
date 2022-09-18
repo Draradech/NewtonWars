@@ -205,6 +205,32 @@ static void missileEnd(SimShot* s)
    }
 }
 
+static void spawnDebris(int pl, Vec2d pos)
+{
+   for(int i = 0; i < conf.numDebrisParticles; ++i)
+   {   
+      SimPlayer*  p = &(player[pl]);
+      p->currentShot = (p->currentShot + 1) % conf.numShots;
+
+      SimShot*    s = &(p->shot[p->currentShot]);
+      SimMissile* m = &(s->missile);
+
+      m->position = pos;
+      double angle = (double)rand() / RAND_MAX * 360.0;
+      m->speed.x = conf.debrisSpeed * cos(angle / 180.0 * M_PI);
+      m->speed.y = conf.debrisSpeed * -sin(angle / 180.0 * M_PI);
+      m->live = 1;
+      m->leftSource = 0;
+      m->stale = 0;
+      s->dot[0] = d2f(m->position);
+      s->length = 1;
+      s->player = pl;
+      s->angle = angle;
+      s->velocity = conf.debrisSpeed;
+      allSendShotBegin(s);
+   }
+}
+
 static void playerHit(SimShot* s, int p, int p2)
 {
    if(p == p2)
@@ -218,7 +244,9 @@ static void playerHit(SimShot* s, int p, int p2)
      player[p].energy += player[p2].energy / 2;
    }
    missileEnd(s);
+   Vec2d oldPos = player[p2].position;
    initPlayer(p2, 0);
+   spawnDebris(p2, oldPos);
    allSendPlayerPos(p2);
    allSendKillMessage(p, p2);
    killflash = 1.0;
@@ -433,11 +461,11 @@ void stepExtrapoints(int timeremain)
    //tick approx once per second:
    if( !(timeremain % 64) )
    {
-      if(conf.extrapoints != CONFIG_EXTRAPOINTS_DEFAULT)
+      if(conf.extrapoints != CONFIG_EXTRAPOINTS_OFF)
       {
          switch(conf.extrapoints)
          {
-            case CONFIG_EXTRAPOINTS_PREFERED_TARGET:
+            case CONFIG_EXTRAPOINTS_RANDOM:
             {
                static int currentPreferedTarget;
                char choosenew=1;
@@ -471,7 +499,7 @@ void stepExtrapoints(int timeremain)
                }
                break;
             }
-            case CONFIG_EXTRAPOINTS_KILL_OLDEST:
+            case CONFIG_EXTRAPOINTS_OLDEST:
             {
                for(ip = 0; ip < conf.maxPlayers; ++ip)
                {
@@ -488,7 +516,7 @@ void stepExtrapoints(int timeremain)
                }
                break;
             }
-            case CONFIG_EXTRAPOINTS_KILL_BEST:
+            case CONFIG_EXTRAPOINTS_BEST:
             {
                int maxkills=-1;
                int mindeaths=INT_MAX;

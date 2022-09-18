@@ -82,7 +82,7 @@ while(1) {
       }
       if($pid == $mypid) {
          $angle += 361 / 3.0;
-	 $angle -= 360 if($angle > 180);
+         $angle -= 360 if($angle > 180);
          send_string($s,sprintf("v %f\n%f\n",$speed,$angle));
       }
   } else {

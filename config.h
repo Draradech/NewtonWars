@@ -1,10 +1,10 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#define CONFIG_EXTRAPOINTS_DEFAULT         0
-#define CONFIG_EXTRAPOINTS_PREFERED_TARGET 1
-#define CONFIG_EXTRAPOINTS_KILL_OLDEST     2
-#define CONFIG_EXTRAPOINTS_KILL_BEST       3
+#define CONFIG_EXTRAPOINTS_OFF     0
+#define CONFIG_EXTRAPOINTS_RANDOM  1
+#define CONFIG_EXTRAPOINTS_OLDEST  2
+#define CONFIG_EXTRAPOINTS_BEST    3
 
 typedef struct
 {
@@ -21,6 +21,8 @@ typedef struct
    char* ip;
    char* message;
    int extrapoints;
+   int numDebrisParticles;
+   double debrisSpeed;
    /* debug options */
    int fastmode;
    int throttle;

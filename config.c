@@ -15,21 +15,23 @@ void help(void)
    printf("Usage: nw [OPTION VALUE] [OPTION VALUE] ...\n");
    printf("\n");
    printf("Valid options:\n");
-   printf(" players       maximum number of players, default: 12\n");
-   printf(" planets       number of planets, default: 24\n");
-   printf(" shots         number of displayed past shots, default: 16\n");
-   printf(" rate          energy increase rate (default 1.0/s)\n");
+   printf(" players       maximum number of players (default: 12)\n");
+   printf(" planets       number of planets (default: 24)\n");
+   printf(" shots         number of displayed past shots (default: 16)\n");
+   printf(" rate          energy increase rate (default 2.0/s)\n");
    printf(" limit         energy limit (default 200.0)\n");
-   printf(" roundtime     time limit per round in s (default 600)\n");
-   printf(" extrapoints   selects the extrapoint mode (one out of: default, prefered, oldest, best\n");
+   printf(" roundtime     time limit per round in s (default 300)\n");
+   printf(" extrapoints   selects the extrapoint mode (one out of: off, random, oldest, best\n) (default: best)");
+   printf(" numdebris     number of debris particles on kill (default 10)\n");
+   printf(" speeddebris   speed of debris particles (default 3.0)\n");
    printf("\n");
-   printf(" fullscreen    fullscreen enabled, default: 1\n");
-   printf(" ratio         aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats), default: 16:9\n");
+   printf(" fullscreen    fullscreen enabled (default: 1)\n");
+   printf(" ratio         aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats) (default: 16:9)\n");
    printf(" playersize    radius of players (default: 4.0)\n");
    printf(" margin        margin around the battlefield before shots are voided (default: 500.0)\n");
    printf("\n");
-   printf(" ip            if set and a free slot exists, display 'to play, telnet \"ip\" 3490', default: empty\n");
-   printf(" message       if set and a free slot exists, display message, supersedes ip, default: empty\n");
+   printf(" ip            if set and a free slot exists, display 'to play, telnet \"ip\" 3490' (default: empty)\n");
+   printf(" message       if set and a free slot exists, display message, supersedes ip (default: empty)\n");
    printf("\n");
    printf("\n");
    printf("Debug options\n");
@@ -48,9 +50,9 @@ void config(int* argc, char** argv)
    conf.maxPlayers = 12;
    conf.numPlanets = 24;
    conf.numShots = 16;
-   conf.rate = 1.0;
+   conf.rate = 2.0;
    conf.limit = 200.01;
-   conf.roundTime = 600; 
+   conf.roundTime = 300; 
 
    conf.fullscreen = 1;
    conf.battlefieldW = sqrt(A * 16 / 9); /* 1885 */
@@ -61,7 +63,10 @@ void config(int* argc, char** argv)
    conf.ip = 0;
    conf.message = 0;
 
-   conf.extrapoints = CONFIG_EXTRAPOINTS_DEFAULT;
+   conf.extrapoints = CONFIG_EXTRAPOINTS_BEST;
+   
+   conf.numDebrisParticles = 10;
+   conf.debrisSpeed = 3.0;
    
    //debug
    conf.debug = 0;
@@ -245,21 +250,21 @@ void config(int* argc, char** argv)
       }
       else if ( (strcmp(b, "extrapoints") == 0) )
       {
-          if( strcmp(c,"prefered") == 0 )
+          if( strcmp(c,"random") == 0 )
           {
-             conf.extrapoints = CONFIG_EXTRAPOINTS_PREFERED_TARGET;
+             conf.extrapoints = CONFIG_EXTRAPOINTS_RANDOM;
           }
           else if( strcmp(c,"oldest") == 0 )
           {
-             conf.extrapoints = CONFIG_EXTRAPOINTS_KILL_OLDEST;
+             conf.extrapoints = CONFIG_EXTRAPOINTS_OLDEST;
           }
           else if( strcmp(c,"best") == 0 )
           {
-             conf.extrapoints = CONFIG_EXTRAPOINTS_KILL_BEST;
+             conf.extrapoints = CONFIG_EXTRAPOINTS_BEST;
           }
           else
           {
-             conf.extrapoints = CONFIG_EXTRAPOINTS_DEFAULT;
+             conf.extrapoints = CONFIG_EXTRAPOINTS_OFF;
           }
       }
       else
