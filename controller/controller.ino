@@ -86,9 +86,9 @@ void loop()
 {
   if(energy > speed)
   {
-    analogWrite(LED_R, 255 - red / 4);
-    analogWrite(LED_G, 255 - grn / 5);
-    analogWrite(LED_B, 255 - blu / 129);
+    analogWrite(LED_R, 255 - red / 63);
+    analogWrite(LED_G, 255 - grn / 63);
+    analogWrite(LED_B, 255 - blu / 63);
   }
   else
   {

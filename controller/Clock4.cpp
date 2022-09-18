@@ -21,36 +21,25 @@ void Clock4::attachInterrupt(void (*_callback)(void))
 
 void Clock4::init(uint32_t cycles)
 {
-  uint8_t psk = 1;
-  
-  while(cycles > 255)
+  if(cycles > 65535)
   {
-    cycles /= 2;
-    psk += 1;
-  }
-  
-  if (psk > 15)
-  {
-    psk = 15;
-    cycles = 255;
+    cycles = 65535;
   }
 
   m_base = cycles;
 
-  TCCR4A = 0;
-  TCCR4B = (1 << PSR4) | psk;
-  TCCR4C = 0;
-  TCCR4D = 0;
-  TCCR4E = 0;
-  OCR4C = m_base - 1;
-  TCNT4 = 0;
-  TIFR4 = (1 << TOV4);
-  TIMSK4 = (1 << TOIE4);
+  TCCR1A = (1 << WGM10);
+  TCCR1B = (1 << WGM13) | (1 << CS10);
+  TCCR1C = 0;
+  OCR1A = m_base;
+  TCNT1 = 0;
+  TIFR1 = (1 << TOV1);
+  TIMSK1 = (1 << TOIE1);
 }
 
 uint8_t Clock4::value()
 {
-  return TCNT4;
+  return TCNT3;
 }
 
 uint8_t Clock4::base()
@@ -71,7 +60,7 @@ boolean Clock4::expired()
   return ret;
 }
 
-ISR(TIMER4_OVF_vect)
+ISR(TIMER1_OVF_vect)
 {
   clock4_trigger = 1;
   if(callback) callback();

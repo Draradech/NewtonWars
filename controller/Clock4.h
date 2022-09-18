@@ -9,8 +9,6 @@ class Clock4
     void attachInterrupt(void (*_callback)(void));
 
   private:
-    uint8_t m_base;
+    uint16_t m_base;
     void init(uint32_t cycles);
 };
-
-
