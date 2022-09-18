@@ -67,15 +67,15 @@ void setup()
 char line[17];
 char debug[12];
 uint8_t mode = 0;
-int32_t res = 100000;
+int64_t res = 1000000000000;
 uint8_t dspPos = 9;
-int32_t angle = 0;
-int32_t speed = 1000000;
+int64_t angle = 0;
+int64_t speed = 10000000000000;
 uint8_t timerCursor;
 uint8_t buttonPin[5] = {LEFT, RIGHT, RESET, MODE, FIRE};
 uint8_t buttonOld[11] = {1};
 uint8_t button[11];
-int32_t energy;
+int64_t energy;
 uint8_t red, grn, blu;
 char serBuffer[64];
 int16_t serIndex;
@@ -86,9 +86,9 @@ void loop()
 {
   if(energy > speed)
   {
-    analogWrite(LED_R, 255 - red / 8);
-    analogWrite(LED_G, 255 - grn / 10);
-    analogWrite(LED_B, 255 - blu / 12);
+    analogWrite(LED_R, 255 - red / 4);
+    analogWrite(LED_G, 255 - grn / 5);
+    analogWrite(LED_B, 255 - blu / 129);
   }
   else
   {
@@ -106,7 +106,7 @@ void loop()
       serBuffer[serIndex] = 0;
       if(serIndex == 4)
       {
-        energy = 100000 * atoi(serBuffer);
+        energy = 1000000000000 * atoi(serBuffer);
         energyTimer = 53;
       }
       if(serIndex == 11)
@@ -150,7 +150,7 @@ void loop()
   }
   else
   {
-    Serial.println("n Controller");
+    Serial.println("n Zeta");
     Serial.println("d 1");
     Serial.println("g");
     colorTimer = 47;
@@ -167,14 +167,14 @@ void loop()
   if(mode == 0)
   {
     angle += inc * res;
-    while(angle < 0) angle += 36000000;
-    while(angle >= 36000000) angle -= 36000000;
+    while(angle < 0) angle += 360000000000000;
+    while(angle >= 360000000000000) angle -= 360000000000000;
   }
   else
   {
     speed += inc * res;
     if(speed < 0) speed = 0;
-    if(speed > 20000000) speed = 20000000;
+    if(speed > 200000000000000) speed = 200000000000000;
   }
 
   for(int i = 0; i < 5; ++i)
@@ -184,7 +184,7 @@ void loop()
 
   if(!button[LEFT] && buttonOld[LEFT])
   {
-    if(res < 1000000)
+    if(res < 10000000000000)
     {
       res *= 10;
       dspPos--;
@@ -205,8 +205,8 @@ void loop()
   if(!button[RESET] && buttonOld[RESET])
   {
     mode = 0;
-    res = 100000;
-    speed = 1000000;
+    res = 1000000000000;
+    speed = 10000000000000;
     angle = 0;
     dspPos = 9;
   }
@@ -217,24 +217,52 @@ void loop()
   }
 
   if(inc != 0) timerCursor = 0;
-  if(++timerCursor > 127) timerCursor = 0;
+  if(++timerCursor > 63) timerCursor = 0;
 
-  sprintf(line, "Angle: %3ld.%.5ld", angle / 100000, angle % 100000);
-  if(mode == 0 && timerCursor > 63) line[dspPos] = ' ';
-  lcd.setCursor(0, 0);
-  lcd.print(debug[0] ? debug : line);
+  int32_t a_predec = angle / 1000000000000;
+  int32_t a_first_5 = (angle % 1000000000000) / 10000000;
+  int32_t a_last_7 = (angle % 10000000);
 
-  sprintf(line, "Speed: %3ld.%.5ld", speed / 100000, speed % 100000);
-  if(mode == 1 && timerCursor > 63) line[dspPos] = ' ';
-  lcd.setCursor(0, 1);
-  lcd.print(line);
+  if(dspPos < 16)
+  {
+    sprintf(line, "Angle: %3ld.%.5ld", a_predec, a_first_5);
+    if(mode == 0 && timerCursor > 31) line[dspPos] = ' ';
+    lcd.setCursor(0, 0);
+    lcd.print(line);
+  }
+  else
+  {
+    sprintf(line, "%3ld.%.5ld%.7ld", a_predec, a_first_5, a_last_7);
+    if(mode == 0 && timerCursor > 31) line[dspPos - 7] = ' ';
+    lcd.setCursor(0, 0);
+    lcd.print(line);
+  }
+
+  int32_t s_predec = speed / 1000000000000;
+  int32_t s_first_5 = (speed % 1000000000000) / 10000000;
+  int32_t s_last_7 = (speed % 10000000);
+
+  if(dspPos < 16)
+  {
+    sprintf(line, "Speed: %3ld.%.5ld", s_predec, s_first_5);
+    if(mode == 1 && timerCursor > 31) line[dspPos] = ' ';
+    lcd.setCursor(0, 1);
+    lcd.print(line);
+  }
+  else
+  {
+    sprintf(line, "%3ld.%.5ld%.7ld", s_predec, s_first_5, s_last_7);
+    if(mode == 1 && timerCursor > 31) line[dspPos - 7] = ' ';
+    lcd.setCursor(0, 1);
+    lcd.print(line);
+  }
 
   if(!button[FIRE] && buttonOld[FIRE])
   {
     if(energy >= speed) energy -= speed;
-    sprintf(line, "v %ld.%.5ld", speed / 100000, speed % 100000);
+    sprintf(line, "v %ld.%.5ld%.7ld", s_predec, s_first_5, s_last_7);
     Serial.println(line);
-    sprintf(line, "%ld.%.5ld", angle / 100000, angle % 100000);
+    sprintf(line, "%ld.%.5ld%.7ld", a_predec, a_first_5, a_last_7);
     Serial.println(line);
   }
 
