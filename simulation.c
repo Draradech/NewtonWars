@@ -635,6 +635,7 @@ void reinitialize(void)
       {
          initPlayer(pl, 1);
          allSendPlayerPos(pl);
+         sendPlanets(pl);
       }
    }
    mode = MODE_PLAYING;
