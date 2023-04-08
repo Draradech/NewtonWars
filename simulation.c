@@ -252,6 +252,26 @@ static void playerHit(SimShot* s, int p, int p2)
    killflash = 1.0;
 }
 
+Vec2d acc(Vec2d pos)
+{
+   int i;
+   Vec2d an;
+   double l;
+   Vec2d a = {0, 0};
+
+   for(i = 0; i < conf.numPlanets; ++i)
+   {
+      an = vsub(planet[i].position, pos);
+      l = length(an);
+      an = vdiv(an, l);
+      an = vmul(an, planet[i].mass / (l * l));
+
+      a = vadd(a, an);
+   }
+
+   return a;
+}
+
 static void initShot(int pl)
 {
    SimPlayer*  p = &(player[pl]);
@@ -262,6 +282,7 @@ static void initShot(int pl)
    p->energy -= p->velocity;
    m->speed.x = p->velocity * cos(p->angle / 180.0 * M_PI);
    m->speed.y = p->velocity * -sin(p->angle / 180.0 * M_PI);
+   m->acceleration = acc(m->position);
    m->live = 1;
    m->leftSource = 0;
    m->stale = 0;
@@ -273,41 +294,50 @@ static void initShot(int pl)
    allSendShotBegin(s);
 }
 
+void stepIntegrate(SimMissile* m)
+{
+   // velocity verlet method
+   // new_pos = pos + speed * dt + acc * 0.5 * dt * dt
+   // new_acc = acc(new_pos)
+   // new_speed = speed + (acc + new_acc) * 0.5 * dt
+   double dt = 1.0 / conf.segmentSteps;
+   Vec2d new_pos = vadd(vadd(m->position, vmul(m->speed, dt)), vmul(m->acceleration, 0.5 * dt * dt));
+   Vec2d new_acc = acc(new_pos);
+   Vec2d new_speed = vadd(m->speed, vmul(vadd(m->acceleration, new_acc), 0.5 * dt));
+   m->position = new_pos;
+   m->speed = new_speed;
+   m->acceleration = new_acc;
+}
+
 static void simulate(void)
 {
-   int sh, i, j, pl, pl2, actp;
+   int sh, i, j, pl, pl2;
    double l;
-   Vec2d v;
    
-   for(i = 0; i < conf.segmentSteps; ++i)
+   for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
-      for(pl = 0; pl < conf.maxPlayers; ++pl)
+      SimPlayer* p = &(player[pl]);
+      if(!p->active) continue;
+
+      for(sh = 0; sh < conf.numShots; ++sh)
       {
-         SimPlayer* p = &(player[pl]);
-         if(!p->active) continue;
-         for(sh = 0; sh < conf.numShots; ++sh)
+         SimShot* s = &(p->shot[sh]);
+         SimMissile* m = &(s->missile);
+         
+         for(i = 0; i < conf.segmentSteps; ++i)
          {
-            SimShot* s = &(p->shot[sh]);
-            SimMissile* m = &(s->missile);
-            if(!m->live) continue;
+            if(!m->live) break;
+            stepIntegrate(m);
+
             for(j = 0; j < conf.numPlanets; ++j)
             {
-               v = vsub(planet[j].position, m->position);
-               l = length(v);
+               l = distance(planet[j].position, m->position);
 
                if (l <= planet[j].radius)
                {
                   missileEnd(s);
                }
-
-               v = vdiv(v, l);
-               v = vmul(v, planet[j].mass / (l * l));
-               v = vdiv(v, conf.segmentSteps);
-
-               m->speed = vadd(m->speed, v);
             }
-            v = vdiv(m->speed, conf.segmentSteps);
-            m->position = vadd(m->position, v);
 
             for(pl2 = 0; pl2 < conf.maxPlayers; ++pl2)
             {
@@ -345,10 +375,7 @@ static void simulate(void)
          }
       }
    }
-   for(pl = 0, actp = 0; pl < conf.maxPlayers; ++pl)
-   {
-      actp += player[pl].active;
-   }
+
    for(pl = 0; pl < conf.maxPlayers; ++pl)
    {
       SimPlayer* p = &(player[pl]);
