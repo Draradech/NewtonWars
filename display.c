@@ -24,6 +24,10 @@
    #include <time.h>
 #endif
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include "config.h"
 #include "color.h"
 #include "simulation.h"
@@ -534,6 +538,11 @@ static void initSystem(int* argc, char ** argv)
       glutPositionWindow(0, 0);
       glutReshapeWindow(1120, 630);
    }
+
+   #ifdef _WIN32
+   // enable vsync
+   ((BOOL (*)(int))wglGetProcAddress("wglSwapIntervalEXT"))(1);
+   #endif
 
    glutDisplayFunc(draw);
    glutReshapeFunc(reshape);
