@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <errno.h>
 #include <limits.h>
 #include <string.h>
@@ -94,7 +95,7 @@ static void snd(int socket, char* msg)
 {
    int flags;
    #if defined __APPLE__ || defined _WIN32
-   flags = MSG_DONTWAIT;
+   flags = 0;
    #else
    flags = MSG_NOSIGNAL | MSG_DONTWAIT;
    #endif
@@ -108,7 +109,7 @@ static void snd_l(int socket, int len, uint32_t* msg)
 {
    int flags;
    #if defined __APPLE__ || defined _WIN32
-   flags = MSG_DONTWAIT;
+   flags = 0;
    #else
    flags = MSG_NOSIGNAL | MSG_DONTWAIT;
    #endif
