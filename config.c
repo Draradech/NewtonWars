@@ -24,6 +24,7 @@ void help(void)
    printf(" extrapoints   selects the extrapoint mode (one out of: off, random, oldest, best\n) (default: best)");
    printf(" numdebris     number of debris particles on kill (default 10)\n");
    printf(" speeddebris   speed of debris particles (default 3.0)\n");
+   printf(" sendplanets   send planet positions to bots (0 / 1) (default 0)\n");
    printf("\n");
    printf(" fullscreen    fullscreen enabled (default: 1)\n");
    printf(" ratio         aspect ratio of battlefield (1.33, 4:3 and 4/3 are valid formats) (default: 16:9)\n");
@@ -67,6 +68,7 @@ void config(int* argc, char** argv)
    
    conf.numDebrisParticles = 10;
    conf.debrisSpeed = 3.0;
+   conf.sendPlanets = 0;
    
    //debug
    conf.debug = 0;
@@ -211,6 +213,15 @@ void config(int* argc, char** argv)
          if(c[0])
          {
             conf.message = c;
+         }
+      }
+      else if (strcmp(b, "sendplanets") == 0)
+      {
+         conf.sendPlanets = atoi(c);
+         if (conf.sendPlanets < 0 || conf.sendPlanets > 1)
+         {
+            printf("sendplanets needs to be 0 or 1\n");
+            exit(0);
          }
       }
       else if (strcmp(b, "debug") == 0)

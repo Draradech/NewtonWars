@@ -377,6 +377,10 @@ void sendPlayerPos(int i, int p)
 
 void sendPlanets(int i)
 {
+   if (conf.sendPlanets == 0)
+   {
+      return;
+   }
     if (connection[i].socket && connection[i].bot)
     {
         int planet_size = sizeof(SimPlanet) / sizeof(uint32_t);

@@ -23,6 +23,7 @@ typedef struct
    int extrapoints;
    int numDebrisParticles;
    double debrisSpeed;
+   char sendPlanets;
    /* debug options */
    int fastmode;
    int throttle;
