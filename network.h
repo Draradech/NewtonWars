@@ -10,6 +10,7 @@
 #define MSG_SHOTFIN 6 /* replaces msg 4 */
 #define MSG_GAMEMODE 7 /* not sent for bot protocol > 8 */
 #define MSG_OWN_ENERGY 8
+#define MSG_PLANETPOS 9
 
 #define MODE_REALTIME 3
 
@@ -18,6 +19,7 @@
 void initNetwork(void);
 void stepNetwork(void);
 
+void sendPlanets(int i);
 void allSendPlayerPos(int p);
 void allSendKillMessage(int p, int p2);
 void allSendShotFinished(SimShot* s);

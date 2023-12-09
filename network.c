@@ -376,6 +376,31 @@ void sendPlayerPos(int i, int p)
    snd_l(i, 4, binsend);
 }
 
+void sendPlanets(int i)
+{
+   if (conf.sendPlanets == 0)
+   {
+      return;
+   }
+    if (connection[i].socket && connection[i].bot)
+    {
+        int planet_size = sizeof(SimPlanet) / sizeof(uint32_t);
+        binsend[0] = MSG_PLANETPOS;
+        binsend[1] = conf.numPlanets;
+        binsend[2] = sizeof(SimPlanet);
+        int buf_index = 3;
+        for (int planet_index = 0; planet_index < conf.numPlanets; planet_index++, buf_index += planet_size)
+        {
+            SimPlanet *temp = getPlanet(planet_index);
+            memcpy(&binsend[buf_index], &temp->position.x, planet_size);
+            memcpy(&binsend[buf_index+2], &temp->position.y, planet_size);
+            memcpy(&binsend[buf_index+4], &temp->radius, planet_size);
+            memcpy(&binsend[buf_index+6], &temp->mass, planet_size);
+        }
+        snd_l(connection[i].socket, buf_index, binsend);
+    }
+}
+
 void sendShotFinished(int i, SimShot* s)
 {
    binsend[0] = MSG_SHOTFINISHED;
@@ -743,6 +768,7 @@ void stepNetwork(void)
                                  sendGameMode(i, pi);
                               }
                               sendOwnId(i, pi);
+                              sendPlanets(pi);
                               for(pi2 = 0; pi2 < conf.maxPlayers; ++pi2)
                               {
                                  if(connection[pi2].socket)
