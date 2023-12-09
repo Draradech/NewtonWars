@@ -43,7 +43,11 @@ int main(int argc, char** argv)
          if(i != 0) continue;
       }
       stepDisplay();
-      millisleep(conf.throttle);
+      
+      if(conf.throttle > 0)
+      {
+         millisleep(conf.throttle);
+      }
    };
 
    return 0;

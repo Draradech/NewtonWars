@@ -10,6 +10,7 @@ typedef struct
 {
    Vec2d position;
    Vec2d speed;
+   Vec2d acceleration;
    int live;
    int leftSource;
    int stale;
