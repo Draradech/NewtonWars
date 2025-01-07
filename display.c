@@ -29,7 +29,7 @@
 #endif
 
 #include "config.h"
-#include "color.h"
+#include "hsluv.h"
 #include "simulation.h"
 
 #if defined TARGET_GLUT
@@ -461,13 +461,31 @@ void initDisplay(int* argc, char** argv)
    uiPlayer = malloc(conf.maxPlayers * sizeof(UiPlayer));
    playersByPoints = malloc(conf.maxPlayers * sizeof(int));
 
+   // find the smallest coprime of max_players and use it as a multiplicator
+   // for more even color distribution
+
+   unsigned int multiplier = 2;
+   while (conf.maxPlayers % multiplier == 0)
+   {
+      multiplier++;
+   }
+
+   double hue_step_size = 360.0 / conf.maxPlayers * multiplier;
+   double red_hue = 11.0;
+
+   
    for(p = 0; p < conf.maxPlayers; ++p)
    {
-      hsv color;
-      color.h = 360.0 / MIN(conf.maxPlayers, 6) * p + (p / 6) * 30.0;
-      color.s = 0.8;
-      color.v = 1.0;
-      uiPlayer[p].color = hsv2rgb(color);
+
+      double hue = p * hue_step_size  + red_hue;
+      double saturation = 120;
+      double luminosity = 70;
+
+      rgb rgb;
+
+      hpluv2rgb(hue, saturation, luminosity, &rgb.r, &rgb.g, &rgb.b);
+
+      uiPlayer[p].color = rgb;
       playersByPoints[p] = p;
    }
    sorted = 0;

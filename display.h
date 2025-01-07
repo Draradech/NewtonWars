@@ -1,6 +1,12 @@
 #ifndef _DISPLAY_H_
 #define _DISPLAY_H_
-#include "color.h"
+
+typedef struct
+{
+    double r;
+    double g;
+    double b;
+} rgb;
 
 void updateZoom(double z);
 void toggleFps(void);
